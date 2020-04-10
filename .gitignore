@@ -1,0 +1,15 @@
+*.DS_STORE
+appveyor.yml
+.vscode/*
+dist/electron/*
+dist/web/*
+dist/*
+build/*
+!build/icons
+node_modules/*
+npm-debug.log
+npm-debug.log.*
+package-lock.json
+yarn.lock
+yarn-error.log
+src/renderer/floo/data/*
