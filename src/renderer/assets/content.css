@@ -1,5 +1,5 @@
 .content {
-  background: #FAFBFC;
+  background: #fafbfc;
   height: 100%;
   margin-left: 240px;
   border-radius: 0px 0px 10px 0px;
@@ -9,7 +9,7 @@
 /** roster info ***/
 .content .roster_info .remove {
   height: 44px;
-  margin-top: 40px
+  margin-top: 40px;
 }
 
 .content .roster_info .remove span {
@@ -21,7 +21,7 @@
   text-align: center;
   display: block;
   margin: 0 auto;
-  background-color: #319DE1;
+  background-color: #319de1;
   border-radius: 5px;
 }
 
@@ -36,25 +36,40 @@
   border-bottom: 1px solid #ececec;
   border-radius: 0px;
   text-indent: 15px;
-  background-color: #f0f0f0
+  background-color: #f0f0f0;
+}
+
+.content .header .delete_button {
+  position: absolute;
+  right: 24px;
+  width: 64px;
+  height: 18px;
+  line-height: 32px;
+  margin-top: -32px;
+  font-size: 12px;
+  color: #319de1;
+}
+
+.content .header .delete_button:hover {
+  color: #880000;
 }
 
 .content .list {
   width: auto;
   height: 75%;
   overflow-y: auto;
-  background-color: #f6f6f6
+  background-color: #f6f6f6;
 }
 
 .content .list .messageFrame {
   padding: 10px 15px;
   overflow: hidden;
   position: relative;
-  background-color: #f6f6f6
+  background-color: #f6f6f6;
 }
 
 .content .list .timeline {
-  background-color: #f6f6f6
+  background-color: #f6f6f6;
 }
 
 .content .list .messageFrame .contentFrame .c_content {
@@ -66,7 +81,6 @@
   font-size: 12px;
   position: relative;
 }
-
 
 .content .list .messageFrame .contentFrame .c_content .h_image {
   position: absolute;
@@ -135,18 +149,17 @@
   margin: 0;
 }
 
-
 .history .messageExt {
   display: none;
 }
 
 .messageExt .item {
-  line-height: 25px;;
+  line-height: 25px;
 }
 
 .content .self .c_content {
   float: right;
-  background: #B3D0FD;
+  background: #b3d0fd;
 }
 
 .content .roster .c_content {
@@ -163,10 +176,9 @@
   height: 60px;
   line-height: 60px;
   text-align: center;
-  color: #83898F;
+  color: #83898f;
   font-size: 14px;
 }
-
 
 .content .c_content .video_frame {
   position: relative;
@@ -196,7 +208,7 @@
 }
 
 .content .c_content .loc_frame {
-  overflow: hidden
+  overflow: hidden;
 }
 
 .content .c_content .loc_frame .loc {
@@ -209,7 +221,7 @@
   margin-left: 5px;
   line-height: 40px;
   cursor: pointer;
-  color: #4A90E2;
+  color: #4a90e2;
 }
 
 .content .c_content .audio_frame {
@@ -220,16 +232,15 @@
   width: 20px;
   height: 25px;
   float: left;
-  padding: 7px 20px
+  padding: 7px 20px;
 }
 
 .content .c_content .audio_txt {
   margin-left: 8px;
   line-height: 40px;
   cursor: pointer;
-  color: #4A90E2;
+  color: #4a90e2;
 }
-
 
 /** input **/
 .content .inputer_frame {
@@ -246,19 +257,23 @@
 .content .inputer_frame .attach .ico {
   float: left;
   cursor: pointer;
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
   margin-top: 4px;
   margin-left: 10px;
-  background-size: 12px 12px;
+  background-size: 14px 14px;
 }
 
 .content .inputer_frame .attach .image {
-  background-image: url(/image/picture.png)
+  background-image: url(/image/picture.png);
 }
 
 .content .inputer_frame .attach .file {
   background-image: url(/image/file.png);
+}
+
+.content .inputer_frame .attach .location {
+  background-image: url(/image/loc2.png);
 }
 
 .content .inputer_frame .attach .mentionList {
@@ -272,7 +287,7 @@
 }
 
 .content .inputer_frame .input {
-  background-color: #f6f6f6
+  background-color: #f6f6f6;
 }
 
 .content .inputer_frame .input .input_text {
@@ -284,7 +299,7 @@
   height: 80px;
   background: white;
   box-sizing: border-box;
-  position: relative
+  position: relative;
 }
 
 .content .chat-index .inputer_frame textarea {
@@ -296,7 +311,6 @@
   font-size: 14px;
   border: none;
 }
-
 
 /**** 群 ...*****/
 .content .chat-index .header .mention_title {
@@ -328,7 +342,7 @@
 .content .chat-index .group_memberlist {
   float: right;
   width: 200px;
-  border-left: 1px solid #EEE;
+  border-left: 1px solid #eee;
   height: 75%;
   margin-top: 38px;
   background: white;
@@ -345,20 +359,20 @@
 }
 
 .content .chat-index .group_memberlist .group_count {
-  color: #83898F;
+  color: #83898f;
   margin-left: 15px;
 }
 
 .content .chat-index .group_memberlist .setting {
   float: right;
-  color: #4A90E2;
+  color: #4a90e2;
   font-size: 12px;
   margin-top: 1px;
 }
 
 .content .chat-index .group_memberlist .search {
   height: 35px;
-  border: 1px solid #EEE;
+  border: 1px solid #eee;
   border-radius: 12px;
   margin: 12px 20px;
   overflow: hidden;
@@ -407,8 +421,8 @@
 }
 
 .user_setting {
-  background: #FFFFFF;
-  box-shadow: 0 2px 4px 2px rgba(199, 199, 199, 0.50);
+  background: #ffffff;
+  box-shadow: 0 2px 4px 2px rgba(199, 199, 199, 0.5);
   border-radius: 10px;
   width: 240px;
   height: 330px;
@@ -429,8 +443,8 @@
 .user_setting .avatar img.av {
   width: 80px;
   height: 80px;
-  border: 4px solid #FFFFFF;
-  box-shadow: 0 2px 20px 0 #FFFFFF;
+  border: 4px solid #ffffff;
+  box-shadow: 0 2px 20px 0 #ffffff;
   border-radius: 13px;
   box-sizing: border-box;
 }
@@ -440,7 +454,7 @@
   height: 24px;
   position: absolute;
   right: 0;
-  top: 28px
+  top: 28px;
 }
 
 .user_setting .line {
@@ -469,7 +483,7 @@
 
 .user_setting .logout {
   line-height: 32px;
-  background: #319DE1;
+  background: #319de1;
   border-radius: 3px;
   font-size: 14px;
   text-align: center;
@@ -495,7 +509,7 @@
   padding: 5px 15px;
   border-radius: 3px;
   color: white;
-  font-size: 12px
+  font-size: 12px;
 }
 
 .roster_notice_list .item .decline {
@@ -503,11 +517,11 @@
   padding: 5px 15px;
   border-radius: 3px;
   color: white;
-  font-size: 12px
+  font-size: 12px;
 }
 
-
-.forwardMemberList { /*** 转发选择用户那个层 ***/
+.forwardMemberList {
+  /*** 转发选择用户那个层 ***/
   position: absolute;
   right: 0;
   top: 60px;

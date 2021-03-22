@@ -113,5 +113,5 @@
     "all": "node .electron-vue/build.js && electron-builder",
     "w": "node .electron-vue/build.js"
   },
-  "version": "0.0.7"
+  "version": "0.0.9"
 }

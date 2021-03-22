@@ -1,6 +1,6 @@
 <template>
-  <div @click="closeLayer" class="video_layer">
-    <video :src="getVideoUrl" autoplay class="video" v-if="getShowing == 'video'" />
+  <div @click="closeLayer" class="image_layer">
+    <img :src="getImageUrl" class="image" v-if="getShowing == 'image'" />
   </div>
 </template>
 
@@ -11,12 +11,12 @@ export default {
   data() {
     return {};
   },
-  name: 'video',
+  name: 'image2',
   mounted() {},
 
   computed: {
     ...mapGetters('layer', ['getShowing']),
-    ...mapGetters('layer', ['getVideoUrl']),
+    ...mapGetters('layer', ['getImageUrl']),
     token() {
       return this.$store.getters.im.userManage.getToken();
     },
