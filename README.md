@@ -4,6 +4,8 @@
 
 美信拓扑 IM 为美信拓扑云服务的 DemoApp，方便 App 开发者体验和使用 IM SDK，可以直接[在线试用](https://chat-h5.maximtop.com)，也可以在官网[下载页面](https://www.maximtop.com/downloads/)选择试用所有客户端。
 
+[![Scc Count Badge](https://sloc.xyz/github/maxim-top/maxim-pc/?category=total&avg-wage=1)](https://github.com/maxim-top/maxim-pc/) [![Scc Count Badge](https://sloc.xyz/github/maxim-top/maxim-pc/?category=code&avg-wage=1)](https://github.com/maxim-top/maxim-pc/) 
+
 ## 工程说明
 
 本工程基于 Electron 开发，UI 与 Web 版基本一致，也是一个典型的 Web 工程。
@@ -27,6 +29,6 @@ yarn win
 
 请先修改美信拓扑 AppID
 
-打开文件 ./src/renderer/App.vue, 将默认 AppID: welovemaxim 更改为你的应用AppID，此 AppID 为在[美信拓扑后台](https://console.maximtop.com/)创建应用后获取。
+打开文件 `./src/renderer/App.vue`, 将默认 AppID: welovemaxim 更改为你的应用AppID，此 AppID 为在[美信拓扑后台](https://console.maximtop.com/)创建应用后获取。
 
 了解更多信息可以阅读[在线文档](https://www.maximtop.com/docs/)，或者在本仓库提问，好好玩 :)
