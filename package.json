@@ -29,8 +29,8 @@
     "copy-webpack-plugin": "^5.1.1",
     "css-loader": "^3.2.0",
     "devtron": "^1.4.0",
-    "electron": "^6.0.12",
-    "electron-builder": "^21.2.0",
+    "electron": ">=9.4.0",
+    "electron-builder": "^22.2.0",
     "electron-debug": "^3.0.1",
     "element-ui": "^2.12.0",
     "eslint": "^6.2.2",
@@ -58,7 +58,7 @@
     "sass-loader": "^7.3.1",
     "script-ext-html-webpack-plugin": "^2.1.4",
     "style-loader": "^1.0.0",
-    "tree-kill": "1.2.1",
+    "tree-kill": ">=1.2.2",
     "typescript": "^3.6.4",
     "typesync": "^0.6.1",
     "terser-webpack-plugin": "^2.3.1",
@@ -113,5 +113,5 @@
     "all": "node .electron-vue/build.js && electron-builder",
     "w": "node .electron-vue/build.js"
   },
-  "version": "0.0.9"
+  "version": "2.9.9"
 }

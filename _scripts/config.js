@@ -2,7 +2,7 @@ const { productName } = require('../package.json')
 
 const config = {
   appId: 'com.maxim.app',
-  copyright: 'Copyright ©2020 ????',
+  copyright: 'Copyright ©2021 MaxIM.Top',
   productName,
   directories: {
     output: 'build/',
