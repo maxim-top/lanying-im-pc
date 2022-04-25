@@ -12,7 +12,7 @@
     "vue-toasted": "^1.1.27",
     "vuex": "^3.1.1"
   },
-  "description": "美信拓扑IM Demo",
+  "description": "蓝莺IM",
   "devDependencies": {
     "@babel/core": "^7.6.4",
     "@babel/plugin-proposal-class-properties": "^7.5.5",
@@ -78,9 +78,9 @@
   },
   "license": "MIT",
   "main": "dist/main.js",
-  "name": "maxim-pc",
+  "name": "lanying-im-pc",
   "private": true,
-  "productName": "美信拓扑IM",
+  "productName": "蓝莺IM",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mubaidr/vue-electron-template.git"
@@ -115,5 +115,5 @@
     "all": "node .electron-vue/build.js && electron-builder",
     "w": "node .electron-vue/build.js"
   },
-  "version": "2.9.10"
+  "version": "3.0.0"
 }
