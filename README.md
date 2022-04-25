@@ -1,8 +1,8 @@
-# 美信拓扑IM PC版
+# 蓝莺IM PC 版
 
-[美信拓扑](https://www.maximtop.com/)，一键启用多云架构的即时通讯云服务
+蓝莺IM，是由[美信拓扑](https://www.maximtop.com/)团队研发的新一代即时通讯云服务，SDK设计简单集成方便，服务采用云原生技术和多云架构，私有云也可按月付费。
 
-美信拓扑 IM 为美信拓扑云服务的 DemoApp，方便 App 开发者体验和使用 IM SDK，可以直接[在线试用](https://chat-h5.maximtop.com)，也可以在官网[下载页面](https://www.maximtop.com/downloads/)选择试用所有客户端。
+蓝莺IM APP 为方便体验试用蓝莺 IMSDK 的 DemoApp。开发者可直接[在线试用](https://chat-h5.maximtop.com)，也可在官网[下载页面](https://www.maximtop.com/downloads/)选择试用所有客户端。
 
 [![Scc Count Badge](https://sloc.xyz/github/maxim-top/maxim-pc/?category=total&avg-wage=1)](https://github.com/maxim-top/maxim-pc/) [![Scc Count Badge](https://sloc.xyz/github/maxim-top/maxim-pc/?category=code&avg-wage=1)](https://github.com/maxim-top/maxim-pc/) 
 
@@ -32,3 +32,6 @@ yarn win
 打开文件 `./src/renderer/App.vue`, 将默认 AppID: welovemaxim 更改为你的应用AppID，此 AppID 为在[美信拓扑后台](https://console.maximtop.com/)创建应用后获取。
 
 了解更多信息可以阅读[在线文档](https://www.maximtop.com/docs/)，或者在本仓库提问，好好玩 :)
+
+-- --
+**蓝莺IM 专业SDK，私有云按月付费**

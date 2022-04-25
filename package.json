@@ -29,7 +29,7 @@
     "copy-webpack-plugin": "^5.1.1",
     "css-loader": "^3.2.0",
     "devtron": "^1.4.0",
-    "electron": ">=9.4.0",
+    "electron": "18.1.0",
     "electron-builder": "^22.2.0",
     "electron-debug": "^3.0.1",
     "element-ui": "^2.12.0",
@@ -69,7 +69,7 @@
     "vue-eslint-parser": "^6.0.4",
     "vue-loader": "^15.8.3",
     "vue-style-loader": "^4.1.2",
-    "vue-template-compiler": "^2.6.10",
+    "vue-template-compiler": "^2.6.14",
     "webpack": "^4.41.2",
     "webpack-cli": "^3.3.7",
     "webpack-dev-server": "^3.8.2",
@@ -102,8 +102,10 @@
     "release": "build",
     "typesync": "typesync --ignoredeps=dev && npm install",
     "package": "electron-builder --mac --config=_scripts/config.js",
-    "win": "rm -rf dist && npm run pack && electron-builder --win --config=_scripts/config.js",
-    "mac": "rm -rf dist && npm run pack && electron-builder --mac --config=_scripts/config.js",
+    "win": "rm -rf dist && npm run pack && electron-builder --win --x64 --config=_scripts/config.js",
+    "win-arm64": "rm -rf dist && npm run pack && electron-builder --win --arm64 --config=_scripts/config.js",
+    "mac": "rm -rf dist && npm run pack && electron-builder --mac --x64 --config=_scripts/config.js",
+    "mac-arm64": "rm -rf dist && npm run pack && electron-builder --mac --arm64 --config=_scripts/config.js",
     "build:dir": "node .electron-vue/build.js && electron-builder --dir",
     "build:clean": "cross-env BUILD_TARGET=clean node .electron-vue/build.js",
     "build:web": "cross-env BUILD_TARGET=web node .electron-vue/build.js",
@@ -113,5 +115,5 @@
     "all": "node .electron-vue/build.js && electron-builder",
     "w": "node .electron-vue/build.js"
   },
-  "version": "2.9.9"
+  "version": "2.9.10"
 }

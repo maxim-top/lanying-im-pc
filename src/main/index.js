@@ -72,6 +72,7 @@ function createWindow () {
     webPreferences: {
       nodeIntegration: true,
       nodeIntegrationInWorker: false,
+      contextIsolation: false,
       webSecurity: false,
     },
     show: false,
