@@ -8,41 +8,54 @@
       </div>
       <div class="contentFrame">
         <p class="username" v-if="!isSelf">{{ userObj.username }}</p>
-        <div class="c_content" v-html="message.mentionStr" v-if="message.mentionStr"></div>
-        <div class="c_content" v-if="!message.mentionStr">
-          <div v-if="message.type === 'text'">
-            {{ message.content }}
-            <div v-if="message.ext">ext:{{ message.ext }}</div>
-          </div>
-          <div v-if="message.type === 'image'">
-            <img :src="attachImage" @click="touchImage" v-if="attachImage !== ''" />
-          </div>
-          <div @click="playAudio" class="audio_frame" v-if="message.type === 'audio'">
-            <img class="audio" src="/image/audio.png" />
-          </div>
-          <div @click="playVideo" class="video_frame" v-if="message.type === 'video'">
-            <img :src="videoImage" class="preview" />
-            <img class="play" src="/image/play.png" />
-          </div>
-          <div class="loc_frame" v-if="message.type === 'file'">
-            <img class="loc" src="/image/file2.png" />
-            <span @click="downloadFile" class="loc_txt">{{ attachName }}</span>
-          </div>
-          <div @click="openLocation" class="loc_frame" v-if="message.type === 'location'">
-            <img class="loc" src="/image/loc.png" />
-            <span class="loc_txt">{{ attachLocation.addr }}</span>
-          </div>
-
-          <el-popover :placement="isSelf ? 'left' : 'right'" trigger="hover" width="70">
-            <div class="messageExt">
-              <div @click="deleteMessage" class="delete item" v-if="!message.h">删除</div>
-              <div @click="forwardMessage" class="recall item">转发</div>
-              <div @click="recallMessage" class="recall item" v-if="isSelf && !message.h">撤回</div>
+        <div :class="{ user_content: true, self: isSelf, roster: !isSelf }">
+          <div class="c_content" v-html="message.mentionStr" v-if="message.mentionStr"></div>
+          <div class="c_content_more">
+            <div class="c_content_text_more" v-if="message.type === 'text'">
+              <span class="c_ext_title" v-if="isMarkdown" @click="changeShowMarkdownFormat">{{ showMarkdownTitle }}</span>
+              <span class="c_ext_title" v-if="message.ext" @click="changeShowExt">{{ showExtTitle }}</span>
             </div>
-            <div class="h_image" slot="reference">
-              <img src="/image/more.png" />
+            <el-popover :placement="isSelf ? 'left' : 'right'" trigger="hover" width="70">
+              <div class="messageExt">
+                <div @click="deleteMessage" class="delete item" v-if="!message.h">删除</div>
+                <div @click="forwardMessage" class="recall item">转发</div>
+                <div @click="recallMessage" class="recall item" v-if="isSelf && !message.h">撤回</div>
+              </div>
+              <div class="h_image" slot="reference">
+                <img src="/image/more.png" />
+              </div>
+            </el-popover>
+          </div>
+          <div class="c_content" v-if="!message.mentionStr" :style="{ 'padding-bottom': showMarkdown ? '0px' : '' }">
+            <div v-if="message.type === 'text'">
+              <div v-if="showMarkdown" v-html="showMarkdownContent" class="c_markdown" />
+              <div v-else>
+                {{ showContent }}
+              </div>
+              <div class="c_content_ext" v-if="showExt">ext: {{ message.ext }}</div>
             </div>
-          </el-popover>
+            <div v-if="message.type === 'rtc'">
+              {{ message.content }}
+            </div>
+            <div v-if="message.type === 'image'">
+              <img class="c_image" :src="attachImage" @click="touchImage" v-if="attachImage !== ''" />
+            </div>
+            <div @click="playAudio" class="audio_frame" v-if="message.type === 'audio'">
+              <img class="audio" src="/image/audio.png" />
+            </div>
+            <div @click="playVideo" class="video_frame" v-if="message.type === 'video'">
+              <img :src="videoImage" class="preview c_image" />
+              <img class="play" src="/image/play.png" />
+            </div>
+            <div class="loc_frame" v-if="message.type === 'file'">
+              <img class="loc" src="/image/file2.png" />
+              <span @click="downloadFile" class="loc_txt">{{ attachName }}</span>
+            </div>
+            <div @click="openLocation" class="loc_frame" v-if="message.type === 'location'">
+              <img class="loc" src="/image/loc.png" />
+              <span class="loc_txt">{{ attachLocation.addr }}</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -62,13 +75,47 @@
 import moment from 'moment';
 import { numToString, toNumber } from '../../../third/tools';
 import { mapGetters } from 'vuex';
+import { Marked } from '../../../third/marked.min.js';
+import { markedHighlight } from 'marked-highlight';
+import hljs from 'highlight.js';
+import 'highlight.js/styles/atom-one-light.css';
+var JSONBigString = require('json-bigint');
 
 export default {
-  name: 'RosterChat',
+  name: 'GroupChat',
   data() {
-    return {};
+    return {
+      showExt: false,
+      showExtTitle: ' 显示扩展 ',
+      showMarkdownTitle: ' 显示原文 ',
+      isMarkdown: false,
+      showMarkdown: false,
+      marked: null,
+      addHlgs: false,
+      content: '',
+      markContent: '',
+
+      showContent: '',
+      appendContent: '',
+      appendTimer: null,
+
+      showMarkdownContent: '',
+      appendMarkdownContent: '',
+      appendMarkdownTimer: null
+    };
   },
   mounted() {
+    const im = this.$store.getters.im;
+    if (!im) return;
+
+    im.on('onGroupMessageContentAppend', (message) => {
+      this.messageContentAppend(message);
+    });
+
+    im.on('onGroupMessageReplace', (message) => {
+      this.messageReplace(message);
+    });
+
     let { timestamp } = this.message;
     timestamp = toNumber(timestamp);
     const savedMessageTime = this.getMessageTime;
@@ -83,6 +130,23 @@ export default {
     if (fromUid !== uid) {
       const im = this.$store.getters.im;
       if (im) im.groupManage.readGroupMessage(this.getSid, this.message.id);
+    }
+
+    let { type } = this.message;
+    if (type === 'text') {
+      this.calculateContent(this.message.content);
+    }
+
+    if (this.message.ext && this.message.ext.length && this.isAIStreamFinish(this.message.ext)) {
+      if (this.showMarkdown) {
+        this.appendMarkdownContent = this.markContent;
+        this.calculateMarkdownAppend(this.markContent, this.message.ext, true);
+      }
+      this.appendContent = this.content;
+      this.calculateAppend(this.content, this.message.ext, true);
+    } else {
+      this.showMarkdownContent = this.markContent;
+      this.showContent = this.message.content;
     }
   },
   components: {
@@ -190,7 +254,7 @@ export default {
       const attachment = this.message.attach || '{}';
       let attachObj = {};
       try {
-        attachObj = JSON.parse(attachment);
+        attachObj = JSONBigString.parse(attachment);
       } catch (ex) {
         //
       }
@@ -275,6 +339,191 @@ export default {
       this.$store.dispatch('layer/actionSetShowing', 'video');
       this.$store.dispatch('layer/actionSetShowmask', true);
       this.$store.dispatch('layer/actionSetVideoUrl', attachUrl);
+    },
+
+    /* eslint-disable no-useless-escape */
+    isMarkdownFormat(str) {
+      const regex = /^\s*(\#+|\*|\-|\d+\.)\s+.+|\!\[.*\]\(.*\)|\`{3}[\w\W]*?\`{3}/gm;
+      if (!regex.test(str)) {
+        const hasTitle = /^\s*\#+\s+.+$/gm.test(str);
+        const hasLink = /\[.*\]\(.*\)/gm.test(str);
+        const hasItalic = /(\*|_).*?(\*|_)/gm.test(str);
+        const hasImage = /\!\[.*\]\(.*\)/gm.test(str);
+        const hasbold = /(\*\*|__)(.*?)(\*\*|__)/gm.test(str);
+        const hasStrikethrough = /~~.*?~~/gm.test(str);
+        const hasBlockquote = /^\s*>+.*/gm.test(str);
+        const hasInlineCodeBlock = /`.*?`/gm.test(str);
+        const hasPartingLine = /^(\*\*\*|---|___)$/gm.test(str);
+        const hasUnorderedList = /^(\s*[-+*]\s+.+\n?)+/gm.test(str);
+        const hasOrderedList = /^(\s*\d+\.\s+.+\n?)+/gm.test(str);
+        return (
+          hasLink || hasTitle || hasItalic || hasImage || hasbold || hasStrikethrough || hasBlockquote || hasInlineCodeBlock || hasPartingLine || hasUnorderedList || hasOrderedList
+        );
+      } else {
+        return true;
+      }
+    },
+
+    hasCodeBlock(str) {
+      return /`.*?`/gm.test(str);
+    },
+
+    changeShowMarkdownFormat() {
+      this.showMarkdown = !this.showMarkdown;
+      if (this.showMarkdown) {
+        this.showMarkdownTitle = ' 显示原文 ';
+      } else {
+        this.showMarkdownTitle = ' 解析格式 ';
+      }
+    },
+
+    changeShowExt() {
+      this.showExt = !this.showExt;
+      if (this.showExt) {
+        this.showExtTitle = ' 隐藏扩展 ';
+      } else {
+        this.showExtTitle = ' 扩展信息 ';
+      }
+    },
+
+    calculateContent(content) {
+      this.isMarkdown = this.isMarkdownFormat(content);
+      if (this.isMarkdown) {
+        if (this.marked) {
+          // already generate markded object. do nothing.
+          let newContent = this.marked.parse(content);
+          if (this.addHlgs) {
+            newContent = newContent.replaceAll('<code', '<code class="hljs"');
+          }
+          this.appendMarkdownContent = newContent.slice(this.markContent.length);
+          this.markContent = newContent;
+        } else {
+          let hasCode = this.hasCodeBlock(content);
+          if (hasCode) {
+            this.marked = new Marked(
+              markedHighlight({
+                langPrefix: 'hljs language-',
+                highlight(code, lang) {
+                  let language = hljs.getLanguage(lang) ? lang : 'plaintext';
+                  if (language === 'plaintext') {
+                    this.addHlgs = true;
+                    return hljs.highlightAuto(code).value;
+                  }
+                  return hljs.highlight(code, { language }).value;
+                }
+              })
+            );
+          } else {
+            this.marked = new Marked();
+          }
+          this.markContent = this.marked.parse(content);
+          if (this.addHlgs) {
+            this.markContent = this.markContent.replaceAll('<code', '<code class="hljs"');
+          } else {
+            this.markContent = this.markContent.replaceAll('<pre><code', '<pre><code class="hljs"');
+          }
+          this.showMarkdown = true;
+        }
+      }
+      this.content = content;
+    },
+
+    isAIStream(extension) {
+      let ext = JSONBigString.parse(extension);
+      if (ext && ext.ai && ext.ai.stream) {
+        return true;
+      } else {
+        return false;
+      }
+    },
+
+    isAIStreamFinish(extension) {
+      let ext = JSONBigString.parse(extension);
+      if (ext && ext.ai && ext.ai.stream && !ext.ai.finish) {
+        return true;
+      } else {
+        return false;
+      }
+    },
+
+    calculateAppend(content, extension, showAll = false) {
+      let ext = JSONBigString.parse(extension);
+      if (ext && ext.ai && ext.ai.stream && ext.ai.stream_interval) {
+        this.appendTimer && clearInterval(this.appendTimer);
+        //每一次计时周期增加两个字符展示。
+        let period = (ext.ai.stream_interval * 1000) / (this.appendContent.length / 2);
+        this.appendTimer = setInterval(() => {
+          if (this.appendContent.length <= 0) {
+            clearInterval(this.appendTimer);
+            this.appendTimer = null;
+            this.showContent = content;
+            if (showAll) {
+              this.showMarkdownContent = this.markContent;
+            }
+          } else {
+            this.showContent += this.appendContent.slice(0, 2);
+            this.appendContent = this.appendContent.slice(2);
+          }
+        }, period);
+      } else {
+        this.showContent = content;
+      }
+    },
+
+    calculateMarkdownAppend(markContent, extension, showAll = false) {
+      let ext = JSONBigString.parse(extension);
+      if (ext && ext.ai && ext.ai.stream && ext.ai.stream_interval) {
+        this.appendMarkdownTimer && clearInterval(this.appendMarkdownTimer);
+        //每一次计时周期增加两个字符展示。
+        let period = (ext.ai.stream_interval * 1000) / (this.appendMarkdownContent.length / 2);
+        this.appendMarkdownTimer = setInterval(() => {
+          if (this.appendMarkdownContent.length <= 0) {
+            clearInterval(this.appendMarkdownTimer);
+            this.appendMarkdownTimer = null;
+            this.showMarkdownContent = markContent;
+            if (showAll) {
+              this.showContent = this.content;
+            }
+          } else {
+            this.showMarkdownContent += this.appendMarkdownContent.slice(0, 2);
+            this.appendMarkdownContent = this.appendMarkdownContent.slice(2);
+          }
+        }, period);
+      } else {
+        this.showMarkdownContent = markContent;
+      }
+    },
+
+    messageContentAppend(message) {
+      this.calculateContent(message.content);
+      if (message.ext && message.ext.length && this.isAIStream(message.ext)) {
+        if (this.isMarkdown) {
+          this.calculateMarkdownAppend(this.markContent, message.ext);
+        }
+        this.appendContent += message.appendedContent;
+        this.calculateAppend(message.content, message.ext);
+      } else {
+        if (this.isMarkdown) {
+          this.showMarkdownContent = this.markContent;
+        }
+        this.showContent = this.content;
+      }
+    },
+
+    messageReplace(message) {
+      this.calculateContent(message.content);
+      if (message.ext && message.ext.length && this.isAIStream(message.ext)) {
+        if (this.isMarkdown) {
+          this.calculateMarkdownAppend(this.markContent, message.ext, true);
+        }
+        this.appendContent = message.content.slice(this.showContent.length);
+        this.calculateAppend(message.content, message.ext, true);
+      } else {
+        if (this.isMarkdown) {
+          this.showMarkdownContent = this.markContent;
+        }
+        this.showContent = this.content;
+      }
     }
   }
 };

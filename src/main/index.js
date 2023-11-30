@@ -1,22 +1,29 @@
-import { app, BrowserWindow, Menu, Tray } from 'electron'
+import { app, BrowserWindow, Menu, Tray, ipcMain, systemPreferences, shell } from 'electron'
 import { productName } from '../../package.json'
 
 var os = require("os");
 var platform = os.platform();
 
 // set app name
-app.setName(productName)
+if (platform === "linux") {
+  app.setName("lanying IM")
+} else {
+  app.setName(productName)
+}
 
 // disable electron warning
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true'
 
 const gotTheLock = app.requestSingleInstanceLock()
 const isDev = process.env.NODE_ENV === 'development'
-let mainWindow
+let windows = []
+//let mainWindow
 let willQuitApp = false;
 let tray = null
+let isFirstWindow = true
 
 // only allow single instance of application
+/*
 if (!isDev) {
   if (gotTheLock) {
     app.on('second-instance', () => {
@@ -35,6 +42,7 @@ if (!isDev) {
     showDevTools: !(process.env.RENDERER_REMOTE_DEBUGGING === 'true'),
   })
 }
+*/
 
 async function installDevTools () {
   try {
@@ -59,7 +67,7 @@ function createWindow () {
     height = 670
   }
 
-  mainWindow = new BrowserWindow({
+  let mainWindow = new BrowserWindow({
     backgroundColor: '#fff',
     width: width,
     height: height,
@@ -73,16 +81,26 @@ function createWindow () {
       nodeIntegration: true,
       nodeIntegrationInWorker: false,
       contextIsolation: false,
-      webSecurity: false,
+      webSecurity: false, 
+      partition: isFirstWindow ? 'persist:userData' : String(+new Date()),
     },
     show: false,
+    icon: platform === "linux" ? `${__dirname}/../_icons/icon.png` : ''
   })
-
+  windows.push(mainWindow)
+  if (isFirstWindow) {
+    isFirstWindow = false
+  }
+  
   if (platform != "darwin") {
     if (isDev) {
       tray = new Tray(`${__dirname}/../../_icons/icon.ico`)
     } else {
-      tray = new Tray(`${__dirname}/../_icons/icon.ico`)
+      if (platform === "linux") {
+        tray = new Tray(`${__dirname}/../_icons/icon.png`)
+      } else {
+        tray = new Tray(`${__dirname}/../_icons/icon.ico`)
+      }
     }
     tray.on('click', () => {
       mainWindow.show()
@@ -105,6 +123,22 @@ function createWindow () {
       .replace(/\\/g, '\\\\')
   }
 
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    if (!url.endsWith('/app/dist/index.html')) {
+      event.preventDefault();
+      shell.openExternal(url);
+    }
+  })
+
+  mainWindow.webContents.setWindowOpenHandler((data) => {
+    if (data.url && !data.url.endsWith('/app/dist/index.html')) {
+      shell.openExternal(data.url)
+      return {
+        action: 'deny'
+      }
+    }
+  })
+
   // Show when loaded
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
@@ -112,11 +146,26 @@ function createWindow () {
   })
 
   mainWindow.on('close', e => {
+    /*
     if (willQuitApp) {
       mainWindow = null
     } else {
       e.preventDefault();
       mainWindow.hide();
+    }
+    */
+  })
+}
+
+if (platform != "linux") {
+  ipcMain.on("getMediaAccessStatus", () => {
+    let microphoneStatus = systemPreferences.getMediaAccessStatus('microphone')
+    if (microphoneStatus !== 'granted') {
+      systemPreferences.askForMediaAccess('microphone')
+    }
+    let cameraStatus = systemPreferences.getMediaAccessStatus('camera')
+    if (cameraStatus !== 'granted') {
+      systemPreferences.askForMediaAccess('camera')
     }
   })
 }
@@ -132,18 +181,19 @@ app.on('ready', () => {
 })
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
+  //if (process.platform !== 'darwin') {
     app.quit()
-  }
+  //}
 })
 
 app.on('activate', () => {
+  /*
   if (mainWindow === null) {
     createWindow()
   } else {
     mainWindow.show()
     mainWindow.focus()
-  }
+  }*/
 })
 
 app.on('before-quit', () => {
@@ -171,12 +221,12 @@ app.on('ready', () => {
  */
 
 const sendMenuEvent = async data => {
-  mainWindow.webContents.send('change-view', data)
+  //mainWindow.webContents.send('change-view', data)
 }
 
 const template = [
   {
-    label: app.getName(),
+    label: productName,
     submenu: [
       {
         label: 'Home',
@@ -193,8 +243,36 @@ const template = [
     ],
   },
   {
+    label: 'Window',
+    submenu: [
+      {
+        label: 'new Window',
+        click: async () => {
+          createWindow()
+        }
+      }
+    ]
+  },
+  {
+    label: 'Edit',
+    submenu: [
+      { role: 'undo' },
+      { role: 'redo' },
+      { type: 'separator' },
+      { role: 'cut' },
+      { role: 'copy' },
+      { role: 'paste' },
+      { role: 'delete' },
+      { type: 'separator' },
+      { role: 'selectAll' }
+    ],
+  },
+  {
     role: 'help',
     submenu: [
+      {
+        role: 'toggleDevTools'
+      },
       {
         label: 'Get Help',
         role: 'help',
@@ -216,6 +294,8 @@ const template = [
 ]
 
 function setMenu () {
+
+  /*
   if (process.platform === 'darwin') {
     template.unshift({
       label: app.getName(),
@@ -234,20 +314,15 @@ function setMenu () {
 
     // @ts-ignore
     template.push({
-      role: 'window',
-    })
-
-    // @ts-ignore
-    template.push({
       role: 'help',
     })
 
     // @ts-ignore
     template.push({ role: 'services' })
   }
+  */
 
   // @ts-ignore
   const menu = Menu.buildFromTemplate(template)
-  //Menu.setApplicationMenu(menu)
-  //Menu.setApplicationMenu(null)
+  Menu.setApplicationMenu(menu)
 }

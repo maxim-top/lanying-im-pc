@@ -21,7 +21,7 @@
   text-align: center;
   display: block;
   margin: 0 auto;
-  background-color: #319de1;
+  background-color: #47b6ff;
   border-radius: 5px;
 }
 
@@ -39,18 +39,28 @@
   background-color: #f0f0f0;
 }
 
-.content .header .delete_button {
+.content .header .header_items {
   position: absolute;
-  right: 24px;
-  width: 64px;
-  height: 18px;
-  line-height: 32px;
-  margin-top: -32px;
-  font-size: 12px;
-  color: #319de1;
+  display: flex;
+  flex-direction: row;
+  width: 100%;
 }
 
-.content .header .delete_button:hover {
+.content .header .header_items .name {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  max-width: 33.3%;
+}
+
+.content .header .header_items .delete_button {
+  position: absolute;
+  right: 0;
+  font-size: 12px;
+  color: #47b6ff;
+  padding-right: 20px;
+}
+
+.content .header .header_items .delete_button:hover {
   color: #880000;
 }
 
@@ -72,19 +82,52 @@
   background-color: #f6f6f6;
 }
 
-.content .list .messageFrame .contentFrame .c_content {
-  word-break: break-all;
-  max-width: 300px;
-  border-radius: 3px;
-  padding: 10px 15px;
-  line-height: 16px;
-  font-size: 12px;
-  position: relative;
+.content .list .messageFrame .contentFrame .c_content_ext {
+  color: gray;
 }
 
-.content .list .messageFrame .contentFrame .c_content .h_image {
-  position: absolute;
-  top: 40%;
+.content .list .messageFrame .contentFrame .c_content_more {
+  display: flex;
+  flex-direction: column;
+}
+
+.content .list .messageFrame .contentFrame .c_content_more .c_content_text_more {
+  display: flex;
+  flex-direction: column;
+}
+
+.content .list .messageFrame .contentFrame .c_content_text_more .c_ext_title {
+  color: rgb(180, 180, 180);
+  border-radius: 20px 20px 20px 20px;
+  background-color: rgb(230, 230, 230);
+  font-size: 12px;
+  min-width: 60px;
+  max-width: 60px;
+  text-align: center;
+  margin-left: 2px;
+  margin-bottom: 2px;
+}
+
+.content .list .messageFrame .contentFrame .c_content {
+  word-break: break-all;
+  border-radius: 3px;
+  margin-left: 6px;
+  margin-right: 6px;
+  padding: 0 14px 12px 12px;
+  line-height: 16px;
+  position: relative;
+  max-width: 100%;
+}
+
+.content .list .messageFrame .contentFrame .c_content .c_markdown {
+  line-height: normal;
+  word-wrap: break-word;
+  word-break: break-all;
+  white-space: normal;
+}
+
+.content .list .messageFrame .contentFrame .c_content_more .h_image {
+  position: relative;
   width: 21px;
   height: 10px;
   border: 1px solid #d1d1d1;
@@ -95,14 +138,14 @@
 }
 
 .self .h_image {
-  left: -30px;
+  margin-left: 40px;
 }
 
 .roster .h_image {
-  right: -30px;
+  margin-left: 3px;
 }
 
-.content .list .messageFrame .contentFrame .c_content .h_image img {
+.content .list .messageFrame .contentFrame .c_content_more .h_image img {
   width: 15px;
   vertical-align: middle;
 }
@@ -116,13 +159,13 @@
 }
 
 .content .list .messageFrame .rosterInfo {
-  height: 24px;
-  width: 24px;
+  height: 32px;
+  width: 32px;
 }
 
 .content .list .messageFrame .rosterInfo img {
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
   border-radius: 3px;
 }
 
@@ -135,18 +178,47 @@
 }
 
 .self .contentFrame {
-  margin-right: 32px;
+  float: right;
+  text-align: right;
+  display: inline-flex;
+  align-items: flex-end;
+  max-width: 66.6%;
+  min-width: max(66.6%, 252px);
 }
 
 .roster .contentFrame {
-  margin-left: 32px;
+  float: left;
+  text-align: left;
+  display: block;
+  max-width: 66.6%;
+  min-width: max(66.6%, 252px);
 }
 
 .contentFrame .username {
   font-size: 12px;
   color: #000;
-  padding: 0;
+  padding: 0 0 5px 10px;
   margin: 0;
+}
+
+.self .contentFrame .user_content {
+  float: left;
+  text-align: left;
+  display: inline-flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: flex-end;
+  width: 100%;
+}
+
+.roster .contentFrame .user_content {
+  float: left;
+  text-align: left;
+  display: inline-flex;
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+  align-items: flex-end;
+  width: 100%;
 }
 
 .history .messageExt {
@@ -160,9 +232,31 @@
 .content .c_content {
   white-space: pre-line;
 }
+
+.content .c_content table {
+  display: block;
+  overflow-x: auto;
+  border-collapse: collapse;
+  background-color: #fafafa;
+}
+
+.content .c_content table,
+th,
+td {
+  border: 1px solid gray;
+}
+
+.content .c_content th,
+td {
+  padding-left: 5px;
+  padding-right: 5px;
+  min-width: 50px;
+}
+
 .content .self .c_content {
   float: right;
-  background: #b3d0fd;
+  background: #b2d2fb;
+  text-align: left;
 }
 
 .content .roster .c_content {
@@ -173,6 +267,10 @@
 .content .c_content img {
   max-width: 200px;
   max-height: 200px;
+}
+
+.content .c_content .c_image {
+  padding-top: 14px;
 }
 
 .content .notice_frame {
@@ -211,6 +309,7 @@
 }
 
 .content .c_content .loc_frame {
+  padding-top: 14px;
   overflow: hidden;
 }
 
@@ -228,6 +327,7 @@
 }
 
 .content .c_content .audio_frame {
+  padding-top: 14px;
   overflow: hidden;
 }
 
@@ -235,7 +335,7 @@
   width: 20px;
   height: 25px;
   float: left;
-  padding: 7px 20px;
+  padding: 0px 10px;
 }
 
 .content .c_content .audio_txt {
@@ -243,6 +343,17 @@
   line-height: 40px;
   cursor: pointer;
   color: #4a90e2;
+}
+
+.content [data-popover='tooltip'] {
+  background: white;
+  color: gray;
+  font-size: 10px;
+  line-height: 0.8;
+  width: 50px !important;
+  text-align: center;
+  float: left;
+  top: calc(75% + 72px) !important;
 }
 
 /** input **/
@@ -277,6 +388,14 @@
 
 .content .inputer_frame .attach .location {
   background-image: url(/image/loc2.png);
+}
+
+.content .inputer_frame .attach .videocall {
+  background-image: url(/image/camera_on.png);
+}
+
+.content .inputer_frame .attach .audiocall {
+  background-image: url(/image/audio_call.png);
 }
 
 .content .inputer_frame .attach .mentionList {
@@ -478,6 +597,10 @@
   text-align: right;
   padding: 0;
   margin: 0;
+  display: block;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  padding-left: 33.3%;
 }
 
 .user_setting .line .switcher {
@@ -486,7 +609,7 @@
 
 .user_setting .logout {
   line-height: 32px;
-  background: #319de1;
+  background: #47b6ff;
   border-radius: 3px;
   font-size: 14px;
   text-align: center;

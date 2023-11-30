@@ -1,6 +1,6 @@
 .header {
   height: 48px;
-  background: #409fe0;
+  background: #47b6ff;
 }
 
 .header .searchArea {
@@ -48,6 +48,20 @@
   margin: 14px 36px 0px 0px;
 }
 
+.header .tab .stab .unread_number {
+  position: relative;
+  left: -5px;
+  color: white;
+  background: red;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 0 5px;
+  border-radius: 10px;
+  line-height: 14px;
+  min-width: 8px;
+  text-align: center;
+}
+
 .header .tab .stab img {
   width: 20px;
   height: 20px;
@@ -76,6 +90,15 @@
   margin-right: 20px;
   line-height: 20px;
   margin-top: 14px;
+  font-size: 16px;
+  color: white;
+}
+
+.header .supportname {
+  float: right;
+  margin-right: 20px;
+  line-height: 20px;
+  margin-left: 6px;
   font-size: 16px;
   color: white;
 }

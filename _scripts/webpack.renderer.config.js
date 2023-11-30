@@ -31,8 +31,13 @@ const config = {
     rules: [
       {
         test: /\.(j|t)s$/,
-        use: 'babel-loader',
         exclude: /node_modules/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: ['@babel/preset-env']
+          }
+        }
       },
       {
         test: /\.node$/,

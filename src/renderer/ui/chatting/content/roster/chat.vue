@@ -3,7 +3,7 @@
     <div @click="requestHistory" id="roster_history_btn">
       {{ queryingHistory ? '正在拉取历史消息，请稍候' : '点击拉取历史消息' }}
     </div>
-    <Message :message="message" v-bind:key="aid" v-for="(message, aid) in allMessages" />
+    <Message ref="vMessages" :message="message" v-bind:key="aid" v-for="(message, aid) in allMessages" />
   </div>
 </template>
 
@@ -13,6 +13,7 @@ import Message from './renderMsg.vue';
 import { numToString, toNumber } from '../../../third/tools';
 
 import { mapGetters } from 'vuex';
+var JSONBigString = require('json-bigint');
 
 export default {
   name: 'RosterChat',
@@ -25,6 +26,22 @@ export default {
 
     im.on('onRosterMessage', (message) => {
       this.reloadMessage(message);
+    });
+
+    im.on('onRosterMessageContentAppend', (message) => {
+      this.calculateScroll(message);
+      let msg = this.$refs.vMessages.reverse().find((item) => item.message.id == message.id);
+      if (msg) {
+        msg.messageContentAppend(message);
+      }
+    });
+
+    im.on('onRosterMessageReplace', (message) => {
+      this.calculateScroll(message);
+      let msg = this.$refs.vMessages.reverse().find((item) => item.message.id == message.id);
+      if (msg) {
+        msg.messageReplace(message);
+      }
     });
 
     im.on('onReceiveHistoryMsg', ({ next }) => {
@@ -78,7 +95,8 @@ export default {
 
   data() {
     return {
-      queryingHistory: false
+      queryingHistory: false,
+      scrollTimer: null
     };
   },
 
@@ -89,7 +107,22 @@ export default {
   computed: {
     ...mapGetters('content', ['getSid', 'getMessages', 'getMessageTime', 'getScroll']),
     allMessages() {
-      const msgs = this.getMessages || [];
+      let msgs = this.getMessages || [];
+      msgs = msgs.filter((item) => {
+        const { type, config, ext } = item;
+        if (type == 'rtc' && config && config.action && config.action !== 'record') {
+          return false;
+        }
+        if (ext) {
+          const sext = JSON.parse(ext);
+          if (type == 'rtc' && sext && sext.callId) {
+            return false;
+          } else if (sext && sext.input_status) {
+            return false;
+          }
+        }
+        return true;
+      });
       msgs.forEach((x) => {
         x.aid = numToString(x.id);
       });
@@ -133,7 +166,16 @@ export default {
           this.$store.getters.im.rosterManage.readRosterMessage(this.getSid, message.id);
         }
         this.requireMessage();
-        this.scroll();
+        if (message.ext && !message.isHistory) {
+          let ext = JSONBigString.parse(message.ext);
+          if (ext && ext.ai && ext.ai.stream && !ext.ai.finish) {
+            this.calculateScroll(message);
+          } else {
+            this.scroll();
+          }
+        } else {
+          this.scroll();
+        }
       }
     },
 
@@ -153,6 +195,24 @@ export default {
       setTimeout(() => {
         this.$refs.rlist && (this.$refs.rlist.scrollTop = this.$refs.rlist.scrollHeight);
       }, 200);
+    },
+
+    calculateScroll(message) {
+      if (message.ext) {
+        let ext = JSONBigString.parse(message.ext);
+        if (ext && ext.ai && ext.ai.stream) {
+          this.scrollTimer && clearInterval(this.scrollTimer);
+          let count = ext.ai.stream_interval * 5;
+          if (count) {
+            this.scrollTimer = setInterval(() => {
+              this.$refs.rlist && (this.$refs.rlist.scrollTop = this.$refs.rlist.scrollHeight);
+              if (count-- <= 0) {
+                clearInterval(this.scrollTimer);
+              }
+            }, 200);
+          }
+        }
+      }
     }
     //methods finish ...
   }

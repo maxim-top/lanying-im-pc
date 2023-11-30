@@ -1,8 +1,10 @@
 <template>
   <div class="header">
-    <span @click="touchUserNameHandler">{{ rosterName }}</span>
-    <span class="typing" style="padding-left: 10px; color: #ddd; font-size: 10px" v-if="status">正在输入...</span>
-    <div class="delete_button" @click="deleteConversation(getSid)">删除会话</div>
+    <div class="header_items">
+      <span class="name" @click="touchUserNameHandler">{{ rosterName }}</span>
+      <span class="typing" style="padding-left: 10px; color: #111; font-size: 12px" v-if="status">正在输入...</span>
+      <div class="delete_button" @click="deleteConversation(getSid)">删除会话</div>
+    </div>
   </div>
 </template>
 
@@ -20,7 +22,13 @@ export default {
     this.$store.getters.im.on('onInputStatusMessage', (message) => {
       const { from, ext } = message;
       if (from == this.getSid) {
-        const { input_status } = ext;
+        let jext = {};
+        try {
+          jext = JSON.parse(ext);
+        } catch (ex) {
+          //
+        }
+        const { input_status } = jext;
         if (input_status == 'nothing') {
           this.status = false;
         } else {

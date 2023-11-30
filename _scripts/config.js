@@ -2,13 +2,13 @@ const { productName } = require('../package.json')
 
 const config = {
   appId: 'com.maxim.app',
-  copyright: 'Copyright ©2021 MaxIM.Top',
+  copyright: 'Copyright © 2019-2023  MaxIM.Top',
   productName,
   directories: {
     output: 'build/',
   },
   files: [
-    '_icons/icon.*',
+    '_icons/*.*',
     '!**/node_modules/**/*',
     'dist/**/*',
     'src/data/**/*',
@@ -40,14 +40,20 @@ const config = {
     },
   },
   linux: {
-    icon: '_icons/icon.png',
-    target: ['deb', 'snap', 'AppImage'],
+    icon: '_icons',
+    target: ['deb'],
   },
   mac: {
     category: 'public.app-category.utilities',
     icon: '_icons/icon.icns',
     target: ['dmg'],
     type: 'distribution',
+    entitlements: "../entitlements.mac.plist",
+    hardenedRuntime: true,
+    extendInfo: {
+      "NSMicrophoneUsageDescription": "请允许本程序访问您的麦克风",
+      "NSCameraUsageDescription": "请允许本程序访问您的摄像头"
+    }
   },
   win: {
     icon: '_icons/icon.ico',

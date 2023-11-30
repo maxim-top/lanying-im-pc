@@ -3,7 +3,8 @@
 
 const state = {
   settingInfo: {},
-  profileInfo: {}
+  profileInfo: {},
+  callStatus: false
 };
 
 const getters = {
