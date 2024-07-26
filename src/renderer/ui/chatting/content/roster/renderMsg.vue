@@ -16,16 +16,16 @@
             </div>
             <el-popover :placement="isSelf ? 'left' : 'right'" trigger="hover" width="70">
               <div class="messageExt">
-                <div @click="deleteMessage" class="item delete" v-if="!message.h">删除</div>
-                <div @click="forwardMessage" class="recall item">转发</div>
-                <div @click="recallMessage" class="recall item" v-if="isSelf && !message.h">撤回</div>
+                <div @click="deleteMessage" class="item delete">删除</div>
+                <div @click="forwardMessage" v-if="message.type !== 'rtc'" class="recall item">转发</div>
+                <div @click="recallMessage" class="recall item" v-if="isSelf">撤回</div>
 
-                <div class="msgStatus item item" v-if="isSelf && messageStatus === 'unread' && !message.h">未读</div>
-                <div class="msgStatus item" v-if="isSelf && messageStatus === 'delivered' && !message.h">送达</div>
-                <div class="msgStatus item" v-if="isSelf && messageStatus === 'read' && !message.h">已读</div>
+                <div class="msgStatus item item" v-if="isSelf && messageStatus === 'unread'">未读</div>
+                <div class="msgStatus item" v-if="isSelf && messageStatus === 'delivered'">送达</div>
+                <div class="msgStatus item" v-if="isSelf && messageStatus === 'read'">已读</div>
 
-                <div class="unread item" v-if="messageStatus === 'unread' && !isSelf && !message.h">未读</div>
-                <div @click="unreadMessage" class="set_unread item" v-if="messageStatus !== 'unread' && !isSelf && !message.h">设置未读</div>
+                <div class="unread item" v-if="messageStatus === 'unread' && !isSelf">未读</div>
+                <div @click="unreadMessage" class="set_unread item" v-if="messageStatus !== 'unread' && !isSelf">设置未读</div>
               </div>
               <div class="h_image" slot="reference">
                 <img src="/image/more.png" />
@@ -85,7 +85,6 @@ import { Marked } from '../../../third/marked.min.js';
 import { markedHighlight } from 'marked-highlight';
 import hljs from 'highlight.js';
 import 'highlight.js/styles/atom-one-light.css';
-var JSONBigString = require('json-bigint');
 
 export default {
   name: 'RosterChat',
@@ -108,9 +107,11 @@ export default {
       showContent: '',
       appendContent: '',
       appendTimer: null,
+      lastSliceStreamTime: 0,
 
       showMarkdownContent: '',
-      appendMarkdownContent: '',
+      showTotalContent: '',
+      showAppendContent: '',
       appendMarkdownTimer: null
     };
   },
@@ -139,17 +140,29 @@ export default {
       this.calculateContent(this.message.content);
     }
 
-    if (this.message.ext && this.message.ext.length && this.isAIStreamFinish(this.message.ext)) {
+    if (!this.message.isHistory && this.message.ext && this.message.ext.length && this.isAIStreamFinish(this.message.ext)) {
       if (this.showMarkdown) {
-        this.appendMarkdownContent = this.markContent;
-        this.calculateMarkdownAppend(this.markContent, this.message.ext, true);
+        this.calculateMarkdownAppend(this.message.content, this.message.ext);
       }
       this.appendContent = this.content;
-      this.calculateAppend(this.content, this.message.ext, true);
+      this.calculateAppend(this.content, this.message.ext);
     } else {
       this.showMarkdownContent = this.markContent;
       this.showContent = this.message.content;
     }
+
+    window.addEventListener('copy', function (event) {
+      if (navigator.userAgent.indexOf('Safari') > -1 && navigator.userAgent.indexOf('Chrome') == -1) {
+        const selection = window.getSelection();
+        const range = selection.getRangeAt(0);
+        const div = document.createElement('div');
+        div.appendChild(range.cloneContents());
+        const text = div.innerHTML.replace('<br>', /\n/g).replace(/<[^>]*>/g, '');
+        event.clipboardData.setData('text/html', text);
+        event.clipboardData.setData('text/plain', text);
+        event.preventDefault();
+      }
+    });
   },
   components: {
     // Chat,
@@ -158,6 +171,7 @@ export default {
   props: ['message'],
   computed: {
     ...mapGetters('content', ['getSid', 'getMessageTime']),
+    ...mapGetters('header', ['getUserProfile']),
     timeMessage() {
       let { timestamp } = this.message;
       timestamp = toNumber(timestamp);
@@ -192,6 +206,7 @@ export default {
 
       if (fromUid === cuid) {
         username = '我';
+        avatar = this.im.sysManage.getImage({ avatar: this.getUserProfile.avatar });
       } else if (0 == fromUid) {
         username = this.system_roster.name;
         avatar = this.system_roster.avatar;
@@ -252,7 +267,7 @@ export default {
       const attachment = this.message.attach || '{}';
       let attachObj = {};
       try {
-        attachObj = JSONBigString.parse(attachment);
+        attachObj = JSON.parse(attachment);
       } catch (ex) {
         //
       }
@@ -270,6 +285,12 @@ export default {
 
       // status will be unread / delivered / read
       return this.im.sysManage.getMessageStatus(cid, this.message.id);
+    }
+  },
+
+  watch: {
+    getUserProfile() {
+      this.userObj;
     }
   },
 
@@ -420,27 +441,33 @@ export default {
       }
     },
 
+    parseMarkdownContent(content) {
+      let newContent = this.marked.parse(content);
+      if (this.addHlgs) {
+        newContent = newContent.replaceAll('<code', '<code class="hljs"');
+      } else {
+        newContent = newContent.replaceAll('<pre><code', '<pre><code class="hljs"');
+      }
+      return newContent;
+    },
+
     calculateContent(content) {
       this.isMarkdown = this.isMarkdownFormat(content);
       if (this.isMarkdown) {
         if (this.marked) {
           // already generate markded object. do nothing.
-          let newContent = this.marked.parse(content);
-          if (this.addHlgs) {
-            newContent = newContent.replaceAll('<code', '<code class="hljs"');
-          }
-          this.appendMarkdownContent = newContent.slice(this.markContent.length);
-          this.markContent = newContent;
+          this.markContent = this.parseMarkdownContent(content);
         } else {
           let hasCode = this.hasCodeBlock(content);
           if (hasCode) {
+            let that = this;
             this.marked = new Marked(
               markedHighlight({
                 langPrefix: 'hljs language-',
                 highlight(code, lang) {
                   let language = hljs.getLanguage(lang) ? lang : 'plaintext';
                   if (language === 'plaintext') {
-                    this.addHlgs = true;
+                    that.addHlgs = true;
                     return hljs.highlightAuto(code).value;
                   }
                   return hljs.highlight(code, { language }).value;
@@ -450,53 +477,70 @@ export default {
           } else {
             this.marked = new Marked();
           }
-          this.markContent = this.marked.parse(content);
-          if (this.addHlgs) {
-            this.markContent = this.markContent.replaceAll('<code', '<code class="hljs"');
-          } else {
-            this.markContent = this.markContent.replaceAll('<pre><code', '<pre><code class="hljs"');
-          }
+          this.markContent = this.parseMarkdownContent(content);
+          this.showAppendContent = content;
           this.showMarkdown = true;
         }
+      } else {
+        this.showMarkdown = false;
       }
       this.content = content;
     },
 
     isAIStream(extension) {
-      let ext = JSONBigString.parse(extension);
-      if (ext && ext.ai && ext.ai.stream) {
-        return true;
-      } else {
+      try {
+        let ext = JSON.parse(extension);
+        if (ext && ext.ai && ext.ai.stream) {
+          return true;
+        } else {
+          return false;
+        }
+      } catch (ex) {
         return false;
       }
     },
 
     isAIStreamFinish(extension) {
-      let ext = JSONBigString.parse(extension);
-      if (ext && ext.ai && ext.ai.stream && !ext.ai.finish) {
-        return true;
-      } else {
+      try {
+        let ext = JSON.parse(extension);
+        if (ext && ext.ai && ext.ai.stream && !ext.ai.finish) {
+          return true;
+        } else {
+          return false;
+        }
+      } catch (ex) {
         return false;
       }
     },
 
-    calculateAppend(content, extension, showAll = false) {
-      let ext = JSONBigString.parse(extension);
+    calculateAppend(content, extension) {
+      let ext = {};
+      try {
+        ext = JSON.parse(extension);
+      } catch (ex) {
+        //
+      }
       if (ext && ext.ai && ext.ai.stream && ext.ai.stream_interval) {
         this.appendTimer && clearInterval(this.appendTimer);
-        //每一次计时周期增加两个字符展示。
-        let period = (ext.ai.stream_interval * 1000) / (this.appendContent.length / 2);
+        //每40毫秒是一个显示周期，每次展示count指定个数的字符。
+        let count = 1;
+        let period = 40;
+        let duration = this.showAppendContent.length * period;
+        if (duration > 20000) {
+          count = Math.ceil(duration / 20000);
+        }
+        let that = this;
         this.appendTimer = setInterval(() => {
-          if (this.appendContent.length <= 0) {
-            clearInterval(this.appendTimer);
-            this.appendTimer = null;
-            this.showContent = content;
-            if (showAll) {
-              this.showMarkdownContent = this.markContent;
-            }
+          if (that.appendContent.length <= 0) {
+            clearInterval(that.appendTimer);
+            that.appendTimer = null;
+            that.showContent = content;
           } else {
-            this.showContent += this.appendContent.slice(0, 2);
-            this.appendContent = this.appendContent.slice(2);
+            if (that.showContent.length && that.showContent.charAt(that.showContent.length - 1) === '｜') {
+              that.showContent = that.showContent.slice(0, that.showContent.length - 1);
+            }
+            that.showContent += that.appendContent.slice(0, count) + '｜';
+            that.appendContent = that.appendContent.slice(count);
           }
         }, period);
       } else {
@@ -504,37 +548,52 @@ export default {
       }
     },
 
-    calculateMarkdownAppend(markContent, extension, showAll = false) {
-      let ext = JSONBigString.parse(extension);
+    calculateMarkdownAppend(content, extension) {
+      let ext = {};
+      try {
+        ext = JSON.parse(extension);
+      } catch (ex) {
+        //
+      }
       if (ext && ext.ai && ext.ai.stream && ext.ai.stream_interval) {
         this.appendMarkdownTimer && clearInterval(this.appendMarkdownTimer);
-        //每一次计时周期增加两个字符展示。
-        let period = (ext.ai.stream_interval * 1000) / (this.appendMarkdownContent.length / 2);
+        //每40毫秒是一个显示周期，每次展示count指定个数的字符。
+        let count = 1;
+        let period = 40;
+        let duration = this.showAppendContent.length * period;
+        if (duration > 20000) {
+          count = Math.ceil(duration / 20000);
+        }
+        let that = this;
         this.appendMarkdownTimer = setInterval(() => {
-          if (this.appendMarkdownContent.length <= 0) {
-            clearInterval(this.appendMarkdownTimer);
-            this.appendMarkdownTimer = null;
-            this.showMarkdownContent = markContent;
-            if (showAll) {
-              this.showContent = this.content;
-            }
+          if (that.showAppendContent.length <= 0) {
+            clearInterval(that.appendMarkdownTimer);
+            that.appendMarkdownTimer = null;
+            that.showMarkdownContent = that.parseMarkdownContent(that.showTotalContent);
           } else {
-            this.showMarkdownContent += this.appendMarkdownContent.slice(0, 2);
-            this.appendMarkdownContent = this.appendMarkdownContent.slice(2);
+            that.showTotalContent += that.showAppendContent.slice(0, count);
+            that.showAppendContent = that.showAppendContent.slice(count);
+            that.showMarkdownContent = that.parseMarkdownContent(that.showTotalContent + '｜');
           }
         }, period);
       } else {
-        this.showMarkdownContent = markContent;
+        this.showMarkdownContent = this.markContent;
       }
     },
 
     messageContentAppend(message) {
+      let oldFlag = this.isMarkdown;
       this.calculateContent(message.content);
+      if (false == oldFlag && true == this.isMarkdown) {
+        this.showTotalContent = this.showContent;
+        this.showMarkdownContent = this.parseMarkdownContent(this.showContent);
+      }
       if (message.ext && message.ext.length && this.isAIStream(message.ext)) {
         if (this.isMarkdown) {
-          this.calculateMarkdownAppend(this.markContent, message.ext);
+          this.showAppendContent = message.content.slice(this.showTotalContent.length);
+          this.calculateMarkdownAppend(message.content, message.ext);
         }
-        this.appendContent += message.appendedContent;
+        this.appendContent = message.content.slice(this.showContent.length);
         this.calculateAppend(message.content, message.ext);
       } else {
         if (this.isMarkdown) {
@@ -546,18 +605,18 @@ export default {
 
     messageReplace(message) {
       this.calculateContent(message.content);
-      if (message.ext && message.ext.length && this.isAIStream(message.ext)) {
-        if (this.isMarkdown) {
-          this.calculateMarkdownAppend(this.markContent, message.ext, true);
-        }
-        this.appendContent = message.content.slice(this.showContent.length);
-        this.calculateAppend(message.content, message.ext, true);
-      } else {
-        if (this.isMarkdown) {
+      if (this.isMarkdown) {
+        clearInterval(this.appendMarkdownTimer);
+        this.appendMarkdownTimer = null;
+        setTimeout(() => {
           this.showMarkdownContent = this.markContent;
-        }
-        this.showContent = this.content;
+        }, 200);
       }
+      clearInterval(this.appendTimer);
+      this.appendTimer = null;
+      setTimeout(() => {
+        this.showContent = this.content;
+      }, 200);
     }
   }
 };

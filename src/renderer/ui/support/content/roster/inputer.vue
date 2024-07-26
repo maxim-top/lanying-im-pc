@@ -11,6 +11,7 @@
           @blur="inputBlurHandler"
           @focus="inputFocusHandler"
           @keydown="textareaKeyDown"
+          @keyup="textareaKeyUp"
           class="input_text"
           :placeholder="[[placeholder]]"
           v-model="message"
@@ -19,11 +20,17 @@
           focus
         ></textarea>
         <div class="button">
-          <div @click="handleSendMessage" class="im_send" />
+          <div id="roster_send_button" @click="handleSendMessage" class="im_send_empty" />
         </div>
       </div>
     </div>
-    <div class="support_link"><a href="https://www.lanyingim.com" target="_blank">打造你的智能聊天APP，使用蓝莺IM SDK</a></div>
+    <div class="support_link">
+      <el-tooltip placement="top" effect="light" :visible-arrow="false">
+        <div slot="content">AppID:{{ appid }}</div>
+        <span class="im_tips"></span>
+      </el-tooltip>
+      <a href="https://www.lanyingim.com" target="_blank">打造你的智能聊天APP，使用蓝莺IM SDK</a>
+    </div>
   </div>
 </template>
 
@@ -36,7 +43,8 @@ export default {
     return {
       placeholder: '',
       message: '',
-      fileType: ''
+      fileType: '',
+      button: null
     };
   },
   components: {},
@@ -44,6 +52,9 @@ export default {
     ...mapGetters('content', ['getSid', 'getIntentMessage']),
     im() {
       return this.$store.state.im;
+    },
+    appid() {
+      return this.$store.state.im.userManage.getAppid();
     }
   },
   mounted() {
@@ -60,6 +71,9 @@ export default {
           return false;
         }
       }
+    },
+    textareaKeyUp() {
+      this.changeSendButtonBackground();
     },
     imageUploadClickHandler() {
       this.fileType = 'image';
@@ -136,10 +150,12 @@ export default {
     },
     inputFocusHandler() {
       this.im.sysManage.sendInputStatusMessage(this.getSid, 'typing');
+      this.changeSendButtonBackground();
     },
 
     inputBlurHandler() {
       this.im.sysManage.sendInputStatusMessage(this.getSid, 'nothing');
+      this.changeSendButtonBackground();
     },
 
     initIntentMessage() {
@@ -148,6 +164,15 @@ export default {
         this.$nextTick(() => {
           this.$refs.inputTextRef.focus();
         });
+      }
+      this.button = document.getElementById('roster_send_button');
+    },
+
+    changeSendButtonBackground() {
+      if (/^\s*$/.test(this.message)) {
+        this.button.className = 'im_send_empty';
+      } else {
+        this.button.className = 'im_send_full';
       }
     }
     //methods finish

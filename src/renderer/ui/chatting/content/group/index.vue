@@ -1,5 +1,5 @@
 <template>
-  <div class="chat-index">
+  <div class="chat-index" @click="handleClick">
     <MemberList />
     <Header />
     <Chat />
@@ -31,6 +31,8 @@ export default {
     this.$store.getters.im.on('onGroupMemberChanged', (/*gid*/) => {
       this.$store.dispatch('content/actionUpdateMemberList');
     });
+
+    this.$store.state.im.groupManage.consumeGroupAtStatus(this.getSid);
   },
   components: {
     Header,
@@ -45,6 +47,10 @@ export default {
   methods: {
     requireGroups() {
       // 获取 memberlist  admin, 拉新数据
+    },
+
+    handleClick() {
+      this.$store.state.im.groupManage.consumeGroupAtStatus(this.getSid);
     }
   },
   watch: {

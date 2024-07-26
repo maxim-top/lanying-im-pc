@@ -95,7 +95,7 @@ export default {
       receiver: this.caller ? this.getSid : info.initiator,
       roomId: this.caller ? 0 : info.roomId,
       secret: this.caller ? this.randomString(8) : '',
-      callId: this.caller ? this.getCallId : '',
+      callId: this.getCallId,
       pin: this.caller ? this.randomString(8) : info.pin,
       hasVideo: true,
       hasAudio: true,
@@ -111,7 +111,12 @@ export default {
       const { ext, isHistory } = message;
       const callStatus = this.$store.state.im.rtcManage.getInCallStatus();
       if (!isHistory && callStatus && ext && message.from != this.$store.state.im.userManage.getUid()) {
-        const sext = JSON.parse(ext);
+        let sext = {};
+        try {
+          sext = JSON.parse(ext);
+        } catch (ex) {
+          //
+        }
         if (sext && sext.callId === this.getCallId) {
           if (Object.prototype.hasOwnProperty.call(sext, 'mute_video')) {
             this.peerCameraClose = sext.mute_video;
@@ -133,7 +138,7 @@ export default {
     ...mapGetters('contact', ['getCallPickupTime']),
     ...mapGetters('contact', ['getCallId']),
     rosterName() {
-      return this.userInfo.nick_name || this.userInfo.username;
+      return this.userInfo.alias || this.userInfo.nick_name || this.userInfo.username || this.userInfo.user_id;
     }
   },
   methods: {

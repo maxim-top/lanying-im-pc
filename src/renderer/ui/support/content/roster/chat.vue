@@ -1,9 +1,11 @@
 <template>
-  <div class="list" ref="rlist">
+  <div class="list" ref="rlist" v-if="!forceRefresh">
     <div @click="requestHistory" id="roster_history_btn">
       {{ queryingHistory ? '正在拉取历史消息，请稍候' : '点击拉取历史消息' }}
     </div>
-    <Message ref="vMessages" :message="message" v-bind:key="aid" v-for="(message, aid) in allMessages" />
+    <div>
+      <Message ref="vMessages" :message="message" v-bind:key="aid" v-for="(message, aid) in allMessages" />
+    </div>
   </div>
 </template>
 
@@ -13,13 +15,13 @@ import Message from './renderMsg.vue';
 import { numToString, toNumber } from '../../../third/tools';
 
 import { mapGetters } from 'vuex';
-var JSONBigString = require('json-bigint');
 
 export default {
   name: 'RosterChat',
   mounted() {
     this.requireMessage();
     this.scroll();
+    this.$store.dispatch('forward/actionCancelForward', false);
 
     const im = this.$store.getters.im;
     if (!im) return;
@@ -29,18 +31,22 @@ export default {
     });
 
     im.on('onRosterMessageContentAppend', (message) => {
-      this.calculateScroll(message);
-      let msg = this.$refs.vMessages.reverse().find((item) => item.message.id == message.id);
-      if (msg) {
-        msg.messageContentAppend(message);
+      if (this.$refs.vMessages) {
+        let msg = this.$refs.vMessages.reverse().find((item) => item.message.id == message.id);
+        if (msg) {
+          msg.messageContentAppend(message);
+          this.calculateScroll(message);
+        }
       }
     });
 
     im.on('onRosterMessageReplace', (message) => {
-      this.calculateScroll(message);
-      let msg = this.$refs.vMessages.reverse().find((item) => item.message.id == message.id);
-      if (msg) {
-        msg.messageReplace(message);
+      if (this.$refs.vMessages) {
+        let msg = this.$refs.vMessages.reverse().find((item) => item.message.id == message.id);
+        if (msg) {
+          msg.messageReplace(message);
+          this.scroll();
+        }
       }
     });
 
@@ -85,6 +91,8 @@ export default {
 
     im.off({
       onRosterMessage: '',
+      onRosterMessageContentAppend: '',
+      onRosterMessageReplace: '',
       onReceiveHistoryMsg: '',
       onMessageStatusChanged: '',
       onMessageRecalled: '',
@@ -96,7 +104,9 @@ export default {
   data() {
     return {
       queryingHistory: false,
-      scrollTimer: null
+      scrollTimer: null,
+      reloadList: [],
+      forceRefresh: false
     };
   },
 
@@ -107,10 +117,33 @@ export default {
   computed: {
     ...mapGetters('content', ['getSid', 'getMessages', 'getMessageTime', 'getScroll']),
     allMessages() {
-      const msgs = this.getMessages || [];
+      let msgs = this.getMessages || [];
+      msgs = msgs.filter((item) => {
+        const { type, config, ext } = item;
+        if (type == 'rtc' && config && config.action && config.action !== 'record') {
+          return false;
+        }
+        if (ext) {
+          let sext = {};
+          try {
+            sext = JSON.parse(ext);
+          } catch (ex) {
+            //
+          }
+          if (type == 'rtc' && sext && sext.callId) {
+            return false;
+          } else if (sext && sext.input_status) {
+            return false;
+          }
+        }
+        return true;
+      });
       msgs.forEach((x) => {
         x.aid = numToString(x.id);
       });
+      if (msgs.length > 1 && msgs[0]) {
+        this.reloadFirstMessage(msgs[0]);
+      }
       return msgs;
     }
   },
@@ -126,6 +159,29 @@ export default {
     }
   },
   methods: {
+    reloadFirstMessage(message) {
+      const fromUid = toNumber(message.from);
+      const toUid = toNumber(message.to);
+      const uid = this.$store.getters.im.userManage.getUid();
+      const cid = fromUid === uid ? toUid : fromUid;
+
+      let needReload = true;
+      for (let i = 0; i < this.reloadList.length; i++) {
+        if (this.reloadList[i] === cid) {
+          needReload = false;
+          break;
+        }
+      }
+
+      if (this.$refs.vMessages && needReload) {
+        let msg = this.$refs.vMessages[0];
+        if (msg) {
+          this.reloadList.unshift(cid);
+          msg.messageReplace(message);
+        }
+      }
+    },
+
     requireMessage() {
       setTimeout(() => {
         this.$store.dispatch('content/actionRequireMessage');
@@ -135,6 +191,10 @@ export default {
     deleteMessage(mid) {
       setTimeout(() => {
         this.$store.dispatch('content/actionDeleteMessage', mid);
+        this.forceRefresh = true;
+        this.$nextTick(() => {
+          this.forceRefresh = false;
+        });
       }, 200);
 
       !this.getMessages.length && this.scroll();
@@ -152,7 +212,12 @@ export default {
         }
         this.requireMessage();
         if (message.ext && !message.isHistory) {
-          let ext = JSONBigString.parse(message.ext);
+          let ext = {};
+          try {
+            ext = JSON.parse(message.ext);
+          } catch (ex) {
+            //
+          }
           if (ext && ext.ai && ext.ai.stream && !ext.ai.finish) {
             this.calculateScroll(message);
           } else {
@@ -177,22 +242,32 @@ export default {
     },
 
     scroll() {
+      let that = this;
       setTimeout(() => {
-        this.$refs.rlist && (this.$refs.rlist.scrollTop = this.$refs.rlist.scrollHeight);
+        that.$refs.rlist && (that.$refs.rlist.scrollTop = that.$refs.rlist.scrollHeight);
       }, 200);
     },
 
     calculateScroll(message) {
       if (message.ext) {
-        let ext = JSONBigString.parse(message.ext);
+        let ext = {};
+        try {
+          ext = JSON.parse(message.ext);
+        } catch (ex) {
+          //
+        }
         if (ext && ext.ai && ext.ai.stream) {
           this.scrollTimer && clearInterval(this.scrollTimer);
-          let count = ext.ai.stream_interval * 5;
+          let interval = ext.ai.stream_interval ? ext.ai.stream_interval : 20;
+          let count = interval * 5;
           if (count) {
+            let that = this;
             this.scrollTimer = setInterval(() => {
-              this.$refs.rlist && (this.$refs.rlist.scrollTop = this.$refs.rlist.scrollHeight);
+              that.$nextTick(() => {
+                that.$refs.rlist && (that.$refs.rlist.scrollTop = that.$refs.rlist.scrollHeight);
+              });
               if (count-- <= 0) {
-                clearInterval(this.scrollTimer);
+                clearInterval(that.scrollTimer);
               }
             }, 200);
           }

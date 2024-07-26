@@ -81,7 +81,7 @@ export default {
       receiver: this.caller ? this.getSid : info.initiator,
       roomId: this.caller ? 0 : info.roomId,
       secret: this.caller ? this.randomString(8) : '',
-      callId: this.caller ? this.getCallId : '',
+      callId: this.getCallId,
       pin: this.caller ? this.randomString(8) : info.pin,
       hasVideo: false,
       hasAudio: true,
@@ -102,7 +102,7 @@ export default {
     ...mapGetters('contact', ['getCallPickupTime']),
     ...mapGetters('contact', ['getCallId']),
     rosterName() {
-      return this.userInfo.nick_name || this.userInfo.username;
+      return this.userInfo.alias || this.userInfo.nick_name || this.userInfo.username || this.userInfo.user_id;
     }
   },
   methods: {

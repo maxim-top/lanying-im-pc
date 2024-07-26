@@ -47,7 +47,11 @@ export default {
   computed: {
     ...mapGetters('content', ['getGroupInfo', 'getSid']),
     groupName() {
-      return this.getGroupInfo.name;
+      let name = this.getGroupInfo.name;
+      if (!name) {
+        this.$store.dispatch('content/actionUpdateGroup');
+      }
+      return name;
     }
   },
   methods: {
@@ -72,6 +76,7 @@ export default {
 
     closeMention() {
       this.mentionMessage = '';
+      this.$store.state.im.groupManage.consumeGroupAtStatus(this.getSid);
     }
     //finish
   }
