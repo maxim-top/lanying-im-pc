@@ -486,7 +486,7 @@
   float: right;
   width: 200px;
   border-left: 1px solid #eee;
-  height: 75%;
+  height: 68%;
   margin-top: 38px;
   background: white;
   box-sizing: border-box;
@@ -596,4 +596,6 @@
 
 .el-tooltip__popper {
   border: none !important;
+  max-width: 260px !important;
+  font-size: 12px;
 }
