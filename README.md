@@ -25,6 +25,12 @@ yarn mac
 yarn win
 ```
 
+### MAC ARM 运行提示
+Apple M1 芯片上可能出现安装包无法运行的问题，需要执行如下命令行进行操作：
+```
+$ xattr -c <path/to/application.app>
+```
+
 ### 开发自己的应用
 
 请先修改美信拓扑 AppID
