@@ -25,6 +25,39 @@ yarn mac
 yarn win
 ```
 
+## 软件签名处理说明
+对于 mac安装包进行签名处理需要修改配置文件`./_scripts/config.js/`，修改内容如下：
+```
+const config = {
+  mac: {
+    category: 'public.app-category.social', // mac应用分类
+    identity: 'your-identity', // mac证书标识
+  }
+}
+```
+
+对于 windows安装包进行签名处理需要修改配置文件`./_scripts/config.js/`，修改内容如下：
+```
+const config = {
+  win: {
+    publisherName: 'your-company-name', // windows应用发布者名称
+    certificateFile: 'your-certificate-file-path', // windows证书文件路径(pfx、p12)
+    certificatePassword: 'your-certificate-password', // windows证书密码
+    signingHashAlgorithms: 'sha256', // 签名算法(推荐 sha256)
+    rfc3161TimeStampServer: 'http://timestamp.digicert.com', // 时间戳服务器地址
+  }
+}
+```
+
+如果不需要进行签名处理，则需要将上述参数都删除掉。同时针对 mac 安装包，需要修改配置文件`./_scripts/config.js/`，修改内容如下：
+```
+const config = {
+  dmg: {
+    sign: false, // 是否进行签名处理 (mac 不进行签名处理)
+  }
+}
+```
+
 ### MAC ARM 运行提示
 Apple M1 芯片上可能出现安装包无法运行的问题，需要执行如下命令行进行操作：
 ```

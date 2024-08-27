@@ -16,8 +16,12 @@ import { numToString, toNumber } from '../../../third/tools';
 
 import { mapGetters } from 'vuex';
 
+import { ipcRenderer } from 'electron';
+var os = require("os");
+var platform = os.platform();
+
 export default {
-  name: 'RosterChat',
+  name: 'GroupChat',
   mounted() {
     this.requireMessage();
     this.scroll();
@@ -25,6 +29,7 @@ export default {
 
     this.$store.getters.im.on('onGroupMessage', (message) => {
       this.reloadMessage(message);
+      this.sendPCNotice();
     });
 
     this.$store.getters.im.on('onGroupMessageContentAppend', (message) => {
@@ -33,6 +38,7 @@ export default {
         if (msg) {
           msg.messageContentAppend(message);
           this.calculateScroll(message);
+          this.sendPCNotice();
         }
       }
     });
@@ -43,6 +49,7 @@ export default {
         if (msg) {
           msg.messageReplace(message);
           this.scroll();
+          this.sendPCNotice();
         }
       }
     });
@@ -264,7 +271,11 @@ export default {
           }
         }
       }
-    }
+    },
+
+    sendPCNotice() {
+      ipcRenderer.send('unread', { type: 'group' });
+    },
     //methods finish ...
   }
 };

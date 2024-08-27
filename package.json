@@ -1,5 +1,5 @@
 {
-  "author": "Muhammad Ubaid Raza <mubaidr@gmail.com>",
+  "author": "Beijing MaximTop Technology Co,.Ltd. <eva@bmxlabs.com>",
   "bugs": {
     "url": "https://github.com/mubaidr/vue-electron-template/issues"
   },
@@ -124,5 +124,5 @@
     "all": "node .electron-vue/build.js && electron-builder",
     "w": "node .electron-vue/build.js"
   },
-  "version": "3.2.3"
+  "version": "3.2.4"
 }

@@ -20,7 +20,7 @@ const config = {
 	],
   dmg: {
     internetEnabled: false,
-    sign: false,
+    sign: true,
     contents: [
       {
         path: '/Applications',
@@ -48,7 +48,8 @@ const config = {
     icon: '_icons/icon.icns',
     target: ['dmg'],
     type: 'distribution',
-    entitlements: "../entitlements.mac.plist",
+    identity: 'Beijing MaximTop Technology Co,.Ltd. (963BX74UXU)',
+    entitlements: "build/../entitlements.mac.plist",
     hardenedRuntime: true,
     extendInfo: {
       "NSMicrophoneUsageDescription": "请允许本程序访问您的麦克风",
@@ -58,6 +59,11 @@ const config = {
   win: {
     icon: '_icons/icon.ico',
     target: ['nsis'],
+    publisherName: 'Beijing MaximTop Technology Co,.Ltd.',
+    certificateFile: 'build/../DevCertDistribution.p12',
+    certificatePassword: 'st234567.',
+    signingHashAlgorithms: ['sha256'],
+    rfc3161TimeStampServer: 'http://timestamp.digicert.com',
   },
   nsis: {
     "oneClick": false,

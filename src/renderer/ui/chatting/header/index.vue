@@ -25,6 +25,9 @@
 
 <script>
 import { mapGetters } from 'vuex';
+import { ipcRenderer } from 'electron';
+var os = require("os");
+var platform = os.platform();
 
 export default {
   mounted() {
@@ -63,6 +66,11 @@ export default {
     },
     getSupportSafariAudio(state) {
       this.checkSafari = !state;
+    },
+    getTotalUnread() {
+      if (this.getTotalUnread > 0) {
+        ipcRenderer.send('unread');
+      }
     }
   },
   computed: {

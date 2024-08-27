@@ -23,6 +23,7 @@
                 <div class="msgStatus item item" v-if="isSelf && messageStatus === 'unread'">未读</div>
                 <div class="msgStatus item" v-if="isSelf && messageStatus === 'delivered'">送达</div>
                 <div class="msgStatus item" v-if="isSelf && messageStatus === 'read'">已读</div>
+                <div @click="downloadAttachment" class="msgStatus item" v-if="message.type === 'file' || message.type === 'image' || message.type === 'video'">下载</div>
 
                 <div class="unread item" v-if="messageStatus === 'unread' && !isSelf">未读</div>
                 <div @click="unreadMessage" class="set_unread item" v-if="messageStatus !== 'unread' && !isSelf">设置未读</div>
@@ -370,6 +371,25 @@ export default {
       const idStr = numToString(this.message.id).toString();
       this.im.rosterManage.recallMessage(this.getSid, idStr);
     },
+
+    downloadAttachment() {
+      let attach = "";
+      switch(this.message.type) {
+        case 'image':
+          attach = this.attachImage;
+          break;
+        case 'file':
+          attach = this.attachUrl;
+          break;
+        case 'video':
+          attach = this.attachVideo;
+          break;
+      }
+      if (attach) {
+        window.open(attach);
+      }
+    },
+
     unreadMessage() {
       const idStr = numToString(this.message.id).toString();
       this.im.rosterManage.unreadMessage(this.getSid, idStr);

@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu, Tray, ipcMain, systemPreferences, shell } from 'electron'
+import { app, BrowserWindow, Menu, Tray, ipcMain, systemPreferences, shell, Notification, nativeImage } from 'electron'
 import { productName } from '../../package.json'
 
 var os = require("os");
@@ -16,11 +16,10 @@ process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true'
 
 const gotTheLock = app.requestSingleInstanceLock()
 const isDev = process.env.NODE_ENV === 'development'
-let windows = []
 //let mainWindow
 let willQuitApp = false;
-let tray = null
 let isFirstWindow = true
+let isMinimized = false;
 
 // only allow single instance of application
 /*
@@ -85,28 +84,59 @@ function createWindow () {
       partition: isFirstWindow ? 'persist:userData' : String(+new Date()),
     },
     show: false,
-    icon: platform === "linux" ? `${__dirname}/../_icons/icon.png` : ''
+    icon: platform === "linux" ? `${__dirname}/../_icons/icon.png` : `${__dirname}/../_icons/icon.ico`
   })
-  windows.push(mainWindow)
   if (isFirstWindow) {
     isFirstWindow = false
   }
   
-  if (platform != "darwin") {
-    if (isDev) {
-      tray = new Tray(`${__dirname}/../../_icons/icon.ico`)
+  let tray = null;
+  if (isDev) {
+    tray = new Tray(`${__dirname}/../../_icons/icon.ico`)
+  } else {
+    if (platform === "linux") {
+      tray = new Tray(`${__dirname}/../_icons/icon.png`)
+    } else if (platform === "darwin") {
+      tray = new Tray(`${__dirname}/../_icons/iconTemplate.png`)
     } else {
-      if (platform === "linux") {
-        tray = new Tray(`${__dirname}/../_icons/icon.png`)
-      } else {
-        tray = new Tray(`${__dirname}/../_icons/icon.ico`)
-      }
+      tray = new Tray(`${__dirname}/../_icons/icon.ico`)
     }
+  }
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: '蓝莺 IM', type: 'normal',
+      click: () => { 
+        mainWindow.show()
+        mainWindow.focus()
+      }
+    },
+    { type: 'separator' },
+    { label: ' 退出 ', type: 'normal', 
+      click: () => { 
+        mainWindow.destroy();
+        tray.destroy();
+        mainWindow = null;
+        tray = null;
+      } 
+    }
+  ]);
+  tray.window = mainWindow;
+  tray.setToolTip('蓝莺 IM');
+  tray.setContextMenu(contextMenu)
+  if (platform === "win32") {
     tray.on('click', () => {
       mainWindow.show()
       mainWindow.focus()
     })
   }
+  tray.on('double-click', () => {
+    mainWindow.show()
+    mainWindow.focus()
+  })
+  tray.on('balloon-click', () => {
+    mainWindow.show()
+    mainWindow.focus()
+  });
 
   // eslint-disable-next-line
   setMenu()
@@ -145,15 +175,20 @@ function createWindow () {
     mainWindow.focus()
   })
 
+  mainWindow.on('minimize', () => {
+    isMinimized = true;
+  });
+  mainWindow.on('show', () => {
+    isMinimized = false;
+  });
+
   mainWindow.on('close', e => {
-    /*
     if (willQuitApp) {
       mainWindow = null
     } else {
       e.preventDefault();
       mainWindow.hide();
     }
-    */
   })
 }
 
@@ -171,7 +206,11 @@ if (platform != "linux") {
 }
 
 app.on('ready', () => {
-    createWindow()
+    createWindow();
+
+    if (platform === "win32") {
+      app.setAppUserModelId(productName);
+    }
 
   //if (isDev) {
     installDevTools()

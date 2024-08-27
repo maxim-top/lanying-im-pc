@@ -1,5 +1,5 @@
 <template>
-  <div class="inputer_frame">
+  <div class="inputer_frame" ref="groupInputer">
     <div class="attach">
       <div class="mentionList" v-if="this.filteredMentionRosters.length > 0">
         <div :key="roster.user_id" @click="clickMemberListHander(roster.user_id)" class="mentionItem" v-for="roster in this.filteredMentionRosters">
@@ -24,7 +24,7 @@ import { mapGetters } from 'vuex';
 import CryptoJS from 'crypto-js';
 
 export default {
-  name: 'rosterInputer',
+  name: 'groupInputer',
   data() {
     return {
       message: '',
@@ -45,19 +45,19 @@ export default {
     }
   },
   mounted() {
-    let that = this;
+    let _this = this;
     this.hasBan = false;
     this.chechBan(this.getSid);
 
     this.$store.getters.im.on('onGroupBaned', (meta) => {
       const { groupId, toUids, content } = meta;
-      if (that.getSid === groupId) {
+      if (_this.getSid === groupId) {
         if (Array.isArray(toUids) && toUids.length && parseInt(content)) {
           toUids.forEach((id) => {
             if (id === this.im.userManage.getUid()) {
-              that.hasBan = true;
-              that.expired_time = Date.now() + parseInt(content) * 60 * 1000;
-              that.startBanCheck();
+              _this.hasBan = true;
+              _this.expired_time = Date.now() + parseInt(content) * 60 * 1000;
+              _this.startBanCheck();
             }
           });
         }
@@ -66,15 +66,59 @@ export default {
 
     this.$store.getters.im.on('onGroupUnbaned', (meta) => {
       const { groupId, toUids } = meta;
-      if (that.getSid === groupId) {
+      if (_this.getSid === groupId) {
         if (Array.isArray(toUids) && toUids.length) {
           toUids.forEach((id) => {
             if (id === this.im.userManage.getUid()) {
-              that.stopBanCheck();
+              _this.stopBanCheck();
             }
           });
         }
       }
+    });
+
+    // paste
+    this.$refs.groupInputer.addEventListener('paste', function (event) {
+      event.preventDefault();
+      const clipboardData = event.clipboardData || window.clipboardData;
+      const items = clipboardData.items;
+      if (items && items.length) {
+        for (let i = 0; i < items.length; i++) {
+          const item = items[i];
+          if (item.kind === 'file') {
+            const blob = item.getAsFile();
+            const file = new File([blob], blob.name, {
+              type: blob.type
+            });
+            _this.fileType = 'file';
+            if (item.type.indexOf('image') >= 0) {
+              _this.fileType = 'image';
+            }
+            _this.sendFileInBackground(file);
+          }
+        }
+      }
+    });
+
+    // drop
+    this.$refs.groupInputer.addEventListener('drop', function (event) {
+      event.preventDefault();
+      const items = event.dataTransfer.files;
+      if (items && items.length) {
+        for (let i = 0; i < items.length; i++) {
+          const item = items[i];
+          _this.fileType = 'file';
+          if (item.type.indexOf('image') >= 0) {
+            _this.fileType = 'image';
+          }
+          _this.sendFileInBackground(item);
+        }
+      }
+    });
+
+    // dragover
+    this.$refs.groupInputer.addEventListener('dragover', function (event) {
+      event.preventDefault();
     });
   },
   destroyed() {
@@ -243,6 +287,10 @@ export default {
 
     fileChangeHandler(e) {
       const file = e.target.files[0];
+      this.sendFileInBackground(file);
+    },
+
+    sendFileInBackground(file) {
       this.im.sysManage
         .asyncFileUpload({
           file,
@@ -276,6 +324,7 @@ export default {
           this.$refs.fileRef.value = '';
         });
     },
+
     clickMemberListHander(uid) {
       const set = new Set(this.mentionSelectedUids);
       set.add(uid);

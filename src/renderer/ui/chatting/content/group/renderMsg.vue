@@ -19,6 +19,7 @@
                 <div @click="deleteMessage" class="delete item">删除</div>
                 <div @click="forwardMessage" v-if="message.type !== 'rtc'" class="recall item">转发</div>
                 <div @click="recallMessage" class="recall item" v-if="isSelf || isAdmin || isOwner">撤回</div>
+                <div @click="downloadAttachment" class="msgStatus item" v-if="message.type === 'file' || message.type === 'image' || message.type === 'video'">下载</div>
               </div>
               <div class="h_image" slot="reference">
                 <img src="/image/more.png" />
@@ -359,6 +360,25 @@ export default {
       const idStr = numToString(this.message.id).toString();
       this.im.groupManage.recallMessage(this.getSid, idStr);
     },
+
+    downloadAttachment() {
+      let attach = "";
+      switch(this.message.type) {
+        case 'image':
+          attach = this.attachImage;
+          break;
+        case 'file':
+          attach = this.attachUrl;
+          break;
+        case 'video':
+          attach = this.attachVideo;
+          break;
+      }
+      if (attach) {
+        window.open(attach);
+      }
+    },
+
     unreadMessage() {
       const idStr = numToString(this.message.id).toString();
       this.im.rosterManage.unreadMessage(this.getSid, idStr);
