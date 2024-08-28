@@ -63,13 +63,13 @@ export default {
 
     // paste
     this.$refs.rosterInputer.addEventListener('paste', function (event) {
-      event.preventDefault();
       const clipboardData = event.clipboardData || window.clipboardData;
       const items = clipboardData.items;
       if (items && items.length) {
         for (let i = 0; i < items.length; i++) {
           const item = items[i];
           if (item.kind === 'file') {
+            event.preventDefault();
             const blob = item.getAsFile();
             const file = new File([blob], blob.name, {
               type: blob.type
