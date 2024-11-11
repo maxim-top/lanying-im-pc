@@ -26,7 +26,11 @@
     </div>
     <div class="support_link">
       <el-tooltip placement="top" effect="light" :visible-arrow="false">
-        <div slot="content">AppID:{{ appid }}</div>
+        <div slot="content">
+          <span>AppID:{{ appid }}</span>
+          <br />
+          <span>{{ verifyInfo }}</span>
+        </div>
         <span class="im_tips"></span>
       </el-tooltip>
       <a href="https://www.lanyingim.com" target="_blank">打造你的智能聊天APP，使用蓝莺IM SDK</a>
@@ -44,7 +48,8 @@ export default {
       placeholder: '',
       message: '',
       fileType: '',
-      button: null
+      button: null,
+      verifyInfo: ''
     };
   },
   components: {},
@@ -104,6 +109,32 @@ export default {
     this.$refs.rosterInputer.addEventListener('dragover', function (event) {
       event.preventDefault();
     });
+
+    let appConfig = this.im.sysManage.getAppConfig(this.im.userManage.getAppid());
+    if (appConfig) {
+      if (appConfig.account_verification_status) {
+        switch (appConfig.account_verification_status) {
+          case 'unverified':
+            this.verifyInfo += '未认证开发者：';
+            break;
+          case 'verified':
+            this.verifyInfo += '已认证：';
+            break;
+          case 'expired':
+            this.verifyInfo += '认证失败：';
+            break;
+          default:
+            this.verifyInfo += '未认证开发者：';
+            break;
+        }
+      }
+      if (appConfig.account_verification_type && appConfig.account_verification_type == 'enterprise') {
+        //
+      } else {
+        this.verifyInfo += '个人开发者 ';
+      }
+      this.verifyInfo += appConfig.account_verification_name;
+    }
   },
   methods: {
     textareaKeyDown(evt) {

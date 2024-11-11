@@ -12,9 +12,9 @@
       <span v-popover:tooltip.top="'发送文件'" @click="fileUploadClickHandler" class="ico file"></span>
       <span v-popover:tooltip.top="'发送位置'" @click="locationClickHandler" class="ico location"></span>
     </div>
-    <el-alert v-if="hasBan" title="您已被禁言，请联系管理员" type="info" center :closable="false"></el-alert>
+    <el-alert v-if="hasBan || hasAllBan" title="您已被禁言，请联系管理员" type="info" center :closable="false"></el-alert>
     <div class="input">
-      <textarea v-if="!this.hasBan" @keydown="textareaKeyDown" @keyup="textKeyUp" class="input_text" v-model="message" wrap="hard"></textarea>
+      <textarea v-if="!(this.hasBan || this.hasAllBan)" @keydown="textareaKeyDown" @keyup="textKeyUp" class="input_text" v-model="message" wrap="hard"></textarea>
     </div>
   </div>
 </template>
@@ -34,25 +34,34 @@ export default {
       filteredMentionRosters: [],
       hasBan: false,
       expired_time: 0,
+      hasAllBan: false,
       banCheckTimer: null
     };
   },
   components: {},
   computed: {
-    ...mapGetters('content', ['getSid', 'getGroupInfo', 'getMemberList']),
+    ...mapGetters('content', ['getSid', 'getGroupInfo', 'getMemberList', 'getAdminList']),
+    isAdmin() {
+      const uid = this.$store.getters.im.userManage.getUid();
+      return this.getAdminList.filter((x) => x.user_id === uid).length > 0;
+    },
     im() {
       return this.$store.state.im;
     }
   },
   mounted() {
     let _this = this;
-    this.hasBan = false;
+
+    //todo later. need ban fix.
+    /*
     this.chechBan(this.getSid);
 
     this.$store.getters.im.on('onGroupBaned', (meta) => {
-      const { groupId, toUids, content } = meta;
-      if (_this.getSid === groupId) {
-        if (Array.isArray(toUids) && toUids.length && parseInt(content)) {
+      const { groupId, toUids, content, all = false } = meta;
+      if (_this.getSid === groupId && !this.isAdmin) {
+        if (all) {
+          _this.hasAllBan = true;
+        } else if (Array.isArray(toUids) && toUids.length && parseInt(content)) {
           toUids.forEach((id) => {
             if (id === this.im.userManage.getUid()) {
               _this.hasBan = true;
@@ -65,9 +74,11 @@ export default {
     });
 
     this.$store.getters.im.on('onGroupUnbaned', (meta) => {
-      const { groupId, toUids } = meta;
-      if (_this.getSid === groupId) {
-        if (Array.isArray(toUids) && toUids.length) {
+      const { groupId, toUids, all = false } = meta;
+      if (_this.getSid === groupId && !this.isAdmin) {
+        if (all) {
+          _this.hasAllBan = false;
+        } else if (Array.isArray(toUids) && toUids.length) {
           toUids.forEach((id) => {
             if (id === this.im.userManage.getUid()) {
               _this.stopBanCheck();
@@ -76,6 +87,7 @@ export default {
         }
       }
     });
+    */
 
     // paste
     this.$refs.groupInputer.addEventListener('paste', function (event) {
@@ -122,12 +134,13 @@ export default {
     });
   },
   destroyed() {
-    this.stopBanCheck();
+    //todo later. need ban fix.
+    //this.stopBanCheck();
   },
   watch: {
     getSid(newSid) {
-      this.hasBan = false;
-      this.chechBan(newSid);
+      //todo later. need ban fix.
+      //this.chechBan(newSid);
     }
   },
   methods: {
@@ -338,15 +351,24 @@ export default {
         this.textKeyUp();
       }
     },
+    //todo later. need ban fix.
+    /*
     chechBan(newSid) {
       let that = this;
-      this.im.groupManage.asyncGroupBannedList({ group_id: newSid }).then((res) => {
+      that.hasBan = false;
+      that.hasAllBan = this.getGroupInfo.ban_expire_time && this.getGroupInfo.ban_expire_time === -1 ? true : false;
+      that.im.groupManage.asyncGroupBannedList({ group_id: newSid }).then((res) => {
         if (Array.isArray(res) && res.length) {
           res.forEach((item) => {
-            if (item.user_id === this.im.userManage.getUid() && item.expired_time > Date.now()) {
-              that.hasBan = true;
-              that.expired_time = item.expired_time;
-              that.startBanCheck();
+            if (item.user_id === this.im.userManage.getUid()) {
+              if (item.expired_time === -1) {
+                that.hasBan = true;
+                that.expired_time = -1;
+              } else if (item.expired_time > Date.now()) {
+                that.hasBan = true;
+                that.expired_time = item.expired_time;
+                that.startBanCheck();
+              }
             }
           });
         }
@@ -368,6 +390,7 @@ export default {
       this.banCheckTimer = null;
       this.hasBan = false;
     },
+    */
 
     checkHideMemberInfo(user_id) {
       let hide = true;
