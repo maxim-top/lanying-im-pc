@@ -125,5 +125,5 @@
     "all": "node .electron-vue/build.js && electron-builder",
     "w": "node .electron-vue/build.js"
   },
-  "version": "3.2.7"
+  "version": "3.2.8"
 }
