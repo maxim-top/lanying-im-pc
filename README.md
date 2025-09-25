@@ -10,6 +10,8 @@
 
 本工程基于 Electron 开发，UI 与 Web 版基本一致，也是一个典型的 Web 工程。
 
+需要 Node.js 22 版本（Node.js v22）或更高版本。
+
 构建前记得运行命令
 ```
 yarn
@@ -64,6 +66,13 @@ Apple M1 芯片上可能出现安装包无法运行的问题，需要执行如�
 $ xattr -c <path/to/application.app>
 ```
 
+### MAC版安装包的公证
+打包前设置公证使用的环境变量
+```
+export APPLE_ID='xxx@example.com' # Apple开发者账号的邮箱
+export APPLE_TEAM_ID='XXXXXXXXX'  # Apple 开发者账号的团队 ID
+export APPLE_APP_SPECIFIC_PASSWORD='xxxx-xxxx-xxxx-xxxx' # Apple 针对应用自动上传或 notarization 生成的 应用专用密码
+```
 ### 开发自己的应用
 
 请先修改美信拓扑 AppID

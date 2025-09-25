@@ -1,8 +1,8 @@
-const { productName } = require('../package.json')
+const { productName } = require('../package.json');
 
 const config = {
   appId: 'com.maxim.app',
-  copyright: 'Copyright © 2019-2024  MaxIM.Top',
+  copyright: 'Copyright © 2019-2025  MaxIM.Top',
   productName,
   directories: {
     output: 'build/',
@@ -14,30 +14,18 @@ const config = {
     'src/**/*',
     "package.json"
   ],
-  "asar": false,
-	"asarUnpack": [
-		"./app/dist",
-	],
+  asar: false,
+  asarUnpack: [
+    "./app/dist",
+  ],
   dmg: {
     internetEnabled: false,
     sign: true,
     contents: [
-      {
-        path: '/Applications',
-        type: 'link',
-        x: 410,
-        y: 230,
-      },
-      {
-        type: 'file',
-        x: 130,
-        y: 230,
-      },
+      { path: '/Applications', type: 'link', x: 410, y: 230 },
+      { type: 'file', x: 130, y: 230 },
     ],
-    window: {
-      height: 380,
-      width: 540,
-    },
+    window: { height: 380, width: 540 },
   },
   linux: {
     icon: '_icons',
@@ -56,27 +44,27 @@ const config = {
       "NSCameraUsageDescription": "请允许本程序访问您的摄像头"
     }
   },
+  // -------- Windows 26+ 兼容配置 --------
   win: {
     icon: '_icons/icon.ico',
     target: ['nsis'],
-    publisherName: 'Beijing MaximTop Technology Co,.Ltd.',
-    certificateFile: 'build/../DevCertDistribution.p12',
-    certificatePassword: 'st234567.',
-    signingHashAlgorithms: ['sha256'],
-    rfc3161TimeStampServer: 'http://timestamp.digicert.com',
+    // 本地证书签名
+    cscLink: 'file://build/../DevCertDistribution.p12',
+    cscKeyPassword: 'st234567.',
+    signAndEditExecutable: true
   },
   nsis: {
-    "oneClick": false,
-		"perMachine": true,
-    "allowElevation": true,
-    "allowToChangeInstallationDirectory": true,
-    "createDesktopShortcut": true,
-    "runAfterFinish": true,
-    "artifactName": "${productName} ${version}.${os}.${ext}",
-    "deleteAppDataOnUninstall": false,
-    "installerIcon": "_icons/icon.ico",
-    "uninstallerIcon": "_icons/icon.ico"
+    oneClick: false,
+    perMachine: true,
+    allowElevation: true,
+    allowToChangeInstallationDirectory: true,
+    createDesktopShortcut: true,
+    runAfterFinish: true,
+    artifactName: "${productName} ${version}.${os}.${ext}",
+    deleteAppDataOnUninstall: false,
+    installerIcon: "_icons/icon.ico",
+    uninstallerIcon: "_icons/icon.ico"
   },
-}
+};
 
-module.exports = config
+module.exports = config;

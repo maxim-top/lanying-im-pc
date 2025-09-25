@@ -20,6 +20,8 @@ const isDev = process.env.NODE_ENV === 'development'
 let willQuitApp = false;
 let isFirstWindow = true
 let isMinimized = false;
+let windows = []
+let lastFocusedWindow = null
 
 // only allow single instance of application
 /*
@@ -89,6 +91,12 @@ function createWindow () {
   if (isFirstWindow) {
     isFirstWindow = false
   }
+
+  windows.push(mainWindow)
+
+  mainWindow.on('focus', () => {
+    lastFocusedWindow = mainWindow
+  })
   
   let tray = null;
   if (isDev) {
@@ -97,7 +105,7 @@ function createWindow () {
     if (platform === "linux") {
       tray = new Tray(`${__dirname}/../_icons/icon.png`)
     } else if (platform === "darwin") {
-      tray = new Tray(`${__dirname}/../_icons/iconTemplate.png`)
+      tray = new Tray(`${__dirname}/../_icons/iconTemplate@2x.png`)
     } else {
       tray = new Tray(`${__dirname}/../_icons/icon.ico`)
     }
@@ -113,29 +121,41 @@ function createWindow () {
     { type: 'separator' },
     { label: ' 退出 ', type: 'normal', 
       click: () => { 
-        mainWindow.destroy();
-        tray.destroy();
-        mainWindow = null;
-        tray = null;
-      } 
+        willQuitApp = true;       // 标记应用要退出
+        if (mainWindow) mainWindow.close();  // 会触发 'close' 事件
+        if (tray) {
+          tray.removeAllListeners();
+          tray.destroy();
+          tray = null;
+        }
+      }
     }
   ]);
   tray.window = mainWindow;
   tray.setToolTip('蓝莺 IM');
-  tray.setContextMenu(contextMenu)
-  if (platform === "win32") {
-    tray.on('click', () => {
-      mainWindow.show()
-      mainWindow.focus()
-    })
-  }
+  tray.on('click', () => {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore(); // 如果最小化就还原
+      mainWindow.show();   // 显示窗口
+      mainWindow.focus();  // 获取焦点
+    }
+  })
+  tray.on('right-click', () => {
+    tray.popUpContextMenu(contextMenu);
+  })
   tray.on('double-click', () => {
-    mainWindow.show()
-    mainWindow.focus()
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore(); // 如果最小化就还原
+      mainWindow.show();   // 显示窗口
+      mainWindow.focus();  // 获取焦点
+    }
   })
   tray.on('balloon-click', () => {
-    mainWindow.show()
-    mainWindow.focus()
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore(); // 如果最小化就还原
+      mainWindow.show();   // 显示窗口
+      mainWindow.focus();  // 获取焦点
+    }
   });
 
   // eslint-disable-next-line
@@ -184,6 +204,20 @@ function createWindow () {
 
   mainWindow.on('close', e => {
     if (willQuitApp) {
+      // 从 windows 数组中移除当前窗口
+      const index = windows.indexOf(mainWindow)
+      if (index > -1) windows.splice(index, 1)
+
+      // 如果 lastFocusedWindow 是当前窗口，指向剩余窗口的最后一个
+      if (lastFocusedWindow === mainWindow) {
+        lastFocusedWindow = windows.length ? windows[windows.length - 1] : null
+      }
+      // 安全清理对应的 Tray
+      if (tray) {
+        tray.removeAllListeners(); // 移除所有事件监听，避免空指针
+        tray.destroy();
+        tray = null;
+      }
       mainWindow = null
     } else {
       e.preventDefault();
@@ -220,19 +254,33 @@ app.on('ready', () => {
 })
 
 app.on('window-all-closed', () => {
-  //if (process.platform !== 'darwin') {
+  if (process.platform !== 'darwin') {
     app.quit()
-  //}
+  }
 })
 
 app.on('activate', () => {
-  /*
-  if (mainWindow === null) {
-    createWindow()
+  if (lastFocusedWindow) {
+    if (lastFocusedWindow.isMinimized()) {
+      lastFocusedWindow.restore()
+    }
+    lastFocusedWindow.show()
+    lastFocusedWindow.focus()
   } else {
-    mainWindow.show()
-    mainWindow.focus()
-  }*/
+    createWindow()
+  }
+})
+
+app.on('second-instance', () => {
+  if (lastFocusedWindow) {
+    if (lastFocusedWindow.isMinimized()) {
+      lastFocusedWindow.restore()
+    }
+    lastFocusedWindow.show()
+    lastFocusedWindow.focus()
+  } else {
+    createWindow()
+  }
 })
 
 app.on('before-quit', () => {

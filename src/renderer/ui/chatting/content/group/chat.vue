@@ -4,7 +4,7 @@
       {{ queryingHistory ? '正在拉取历史消息，请稍候' : '点击拉取历史消息' }}
     </div>
     <div>
-      <Message ref="vMessages" :message="message" v-bind:key="aid" v-for="(message, aid) in allMessages" />
+      <Message ref="vMessages" :message="message" v-bind:key="message.id" v-for="message in allMessages" />
     </div>
   </div>
 </template>
@@ -72,6 +72,9 @@ export default {
       // this.requireMessage();
       if (status === 'sending') {
         console.log('Sending Message status changed to sending mid: ', mid);
+        if (!this.isMessageInCurrentConv(message)) {
+          return;
+        }
         this.$store.dispatch('content/actionAppendMessage', {
           sendingMessages: [message]
         });
@@ -160,9 +163,6 @@ export default {
           x.mentionStr = content;
         }
       });
-      if (msgs.length > 1 && msgs[0]) {
-        this.reloadFirstMessage(msgs[0]);
-      }
       return msgs;
     }
   },
@@ -178,22 +178,11 @@ export default {
     }
   },
   methods: {
-    reloadFirstMessage(message) {
-      let needReload = true;
-      for (let i = 0; i < this.reloadList.length; i++) {
-        if (this.reloadList[i] === this.getSid) {
-          needReload = false;
-          break;
-        }
-      }
-
-      if (this.$refs.vMessages && needReload) {
-        let msg = this.$refs.vMessages[0];
-        if (msg) {
-          this.reloadList.unshift(this.getSid);
-          msg.messageReplace(message);
-        }
-      }
+    isMessageInCurrentConv(message) {
+      const toUid = toNumber(message.to);
+      const pid = this.getSid;
+      const uid = this.$store.getters.im.userManage.getUid();
+      return toUid === pid;
     },
 
     requireMessage() {
